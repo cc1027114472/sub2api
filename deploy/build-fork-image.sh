@@ -65,7 +65,7 @@ build_frontend_cache() {
     local cache_tag
 
     node_image="$(require_value NODE_IMAGE node:24-alpine)"
-    node_heap="$(require_value NODE_MAX_OLD_SPACE_SIZE 1536)"
+    node_heap="$(require_value NODE_MAX_OLD_SPACE_SIZE 2048)"
     npm_registry="$(require_value NPM_CONFIG_REGISTRY https://registry.npmjs.org)"
     image_name="$(require_value SUB2API_IMAGE sub2api-fork)"
     cache_tag="${image_name}:frontend-cache"

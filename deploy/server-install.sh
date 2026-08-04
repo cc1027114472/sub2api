@@ -197,6 +197,7 @@ SUB2API_IMAGE_TAG=${image_tag}
 NPM_CONFIG_REGISTRY=https://registry.npmjs.org
 GOPROXY=https://proxy.golang.org,direct
 GOSUMDB=sum.golang.org
+NODE_MAX_OLD_SPACE_SIZE=2048
 
 POSTGRES_USER=sub2api
 POSTGRES_PASSWORD=${postgres_password}
