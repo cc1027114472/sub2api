@@ -13,6 +13,8 @@ redis_data/
 # Backup files
 *.backup
 *.bak
+backups/
+.deploy/
 
 # Temporary files
 *.tmp
