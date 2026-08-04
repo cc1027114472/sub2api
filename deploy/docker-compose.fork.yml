@@ -21,6 +21,7 @@ services:
         GOPROXY: "${GOPROXY:-https://proxy.golang.org,direct}"
         GOSUMDB: "${GOSUMDB:-sum.golang.org}"
         NPM_CONFIG_REGISTRY: "${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org}"
+        NODE_MAX_OLD_SPACE_SIZE: "${NODE_MAX_OLD_SPACE_SIZE:-1536}"
     environment:
       - SERVER_MAX_REQUEST_BODY_SIZE=${SERVER_MAX_REQUEST_BODY_SIZE:-67108864}
       - GATEWAY_MAX_BODY_SIZE=${GATEWAY_MAX_BODY_SIZE:-67108864}

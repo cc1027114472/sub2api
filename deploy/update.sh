@@ -78,8 +78,7 @@ new_revision="$(git -C "${PROJECT_ROOT}" rev-parse --short=12 HEAD)"
 set_env_value SUB2API_IMAGE_TAG "git-${new_revision}"
 
 log "building and starting the updated fork image"
-DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 compose config >/dev/null
-DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 compose build --pull sub2api
+bash "${SCRIPT_DIR}/build-fork-image.sh"
 compose up -d --remove-orphans
 
 bash "${SCRIPT_DIR}/healthcheck.sh"

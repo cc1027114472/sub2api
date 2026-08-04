@@ -37,29 +37,6 @@ compose() {
     )
 }
 
-set_env_value() {
-    local key="$1"
-    local value="$2"
-    local file="$3"
-    local tmp_file
-
-    tmp_file="$(mktemp "${file}.XXXXXX")"
-    awk -F= -v wanted="${key}" -v replacement="${value}" '
-        BEGIN { replaced = 0 }
-        $1 == wanted {
-            print wanted "=" replacement
-            replaced = 1
-            next
-        }
-        { print }
-        END {
-            if (!replaced) print wanted "=" replacement
-        }
-    ' "${file}" > "${tmp_file}"
-    chmod 600 "${tmp_file}"
-    mv -- "${tmp_file}" "${file}"
-}
-
 require_root() {
     [ "${EUID}" -eq 0 ] || fail "run this script as root"
 }
@@ -247,7 +224,7 @@ build_and_start() {
     compose config >/dev/null
 
     log "building the application image from the checked-out fork"
-    DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 compose build --pull sub2api
+    bash "${SCRIPT_DIR}/build-fork-image.sh"
 
     log "starting the application stack"
     compose up -d --remove-orphans
