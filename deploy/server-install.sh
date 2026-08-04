@@ -80,10 +80,21 @@ install_host_packages() {
         fi
     fi
 
+    if ! docker buildx version >/dev/null 2>&1; then
+        if apt-cache show docker-buildx >/dev/null 2>&1; then
+            apt-get install -y docker-buildx
+        elif apt-cache show docker-buildx-plugin >/dev/null 2>&1; then
+            apt-get install -y docker-buildx-plugin
+        else
+            fail "Docker Buildx package is not available in the configured apt sources"
+        fi
+    fi
+
     systemctl enable --now docker
     systemctl enable --now fail2ban
     docker version --format '{{.Server.Version}}' >/dev/null
     docker compose version >/dev/null
+    docker buildx version >/dev/null
 }
 
 ensure_swap() {

@@ -87,6 +87,7 @@ main() {
     [ -f "${ENV_FILE}" ] || fail "missing ${ENV_FILE}"
     [ -f "${PROJECT_ROOT}/Dockerfile" ] || fail "missing ${PROJECT_ROOT}/Dockerfile"
     command -v docker >/dev/null 2>&1 || fail "docker is not installed"
+    docker buildx version >/dev/null 2>&1 || fail "Docker Buildx is required; rerun deploy/server-install.sh to install it"
 
     log "validating the merged Compose configuration"
     compose config >/dev/null
