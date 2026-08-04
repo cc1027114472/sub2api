@@ -77,20 +77,23 @@ function injectPublicSettings(backendUrl: string): Plugin {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   // 加载环境变量
   const env = loadEnv(mode, process.cwd(), '')
   const backendUrl = env.VITE_DEV_PROXY_TARGET || 'http://localhost:8080'
   const devPort = Number(env.VITE_DEV_PORT || 3000)
+  const plugins: Plugin[] = [vue()]
+
+  // Production builds already run `vue-tsc -b` in the package script.
+  // Running vite-plugin-checker again doubles TypeScript memory usage on
+  // small build hosts, so keep the live checker for the dev server only.
+  if (command === 'serve') {
+    plugins.push(checker({ vueTsc: true }))
+  }
+  plugins.push(injectPublicSettings(backendUrl))
 
   return {
-    plugins: [
-      vue(),
-      checker({
-        vueTsc: true
-      }),
-      injectPublicSettings(backendUrl)
-    ],
+    plugins,
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
