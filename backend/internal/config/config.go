@@ -1023,6 +1023,13 @@ type GatewayConfig struct {
 type GatewayLiveConfig struct {
 	// MaxSessionDurationSeconds 是 Live 会话的硬上限。
 	MaxSessionDurationSeconds int `mapstructure:"max_session_duration_seconds"`
+	// RequireBillingEligibility 为 true 时，CreateLiveCall 在选号前强制校验余额/订阅资格。
+	// Handler 层已有同等检查；此处为防御性二次闸门。
+	RequireBillingEligibility bool `mapstructure:"require_billing_eligibility"`
+	// CostPerMinuteUSD is the wall-clock duration price for Live sessions.
+	// Cost = duration_minutes * CostPerMinuteUSD. Zero disables duration billing
+	// (usage is still logged; eligibility gate remains independent).
+	CostPerMinuteUSD float64 `mapstructure:"cost_per_minute_usd"`
 }
 
 // GatewayOpenAIHTTP2Config OpenAI HTTP 上游协议配置。
@@ -1929,7 +1936,7 @@ func setDefaults() {
 	viper.SetDefault("security.csp.enabled", true)
 	viper.SetDefault("security.csp.policy", DefaultCSPPolicy)
 	viper.SetDefault("security.proxy_probe.insecure_skip_verify", false)
-	viper.SetDefault("security.trust_forwarded_ip_for_api_key_acl", true)
+	viper.SetDefault("security.trust_forwarded_ip_for_api_key_acl", false)
 
 	// Security - disable direct fallback on proxy error
 	viper.SetDefault("security.proxy_fallback.allow_direct_on_error", false)
@@ -2230,6 +2237,8 @@ func setDefaults() {
 	viper.SetDefault("gateway.openai_passthrough_allow_timeout_headers", false)
 	viper.SetDefault("gateway.openai_compact_model", "gpt-5.4")
 	viper.SetDefault("gateway.live.max_session_duration_seconds", 3600)
+	viper.SetDefault("gateway.live.require_billing_eligibility", true)
+	viper.SetDefault("gateway.live.cost_per_minute_usd", 0.05)
 	// OpenAI Responses WebSocket（默认开启；可通过 force_http 紧急回滚）
 	viper.SetDefault("gateway.openai_ws.enabled", true)
 	viper.SetDefault("gateway.openai_ws.mode_router_v2_enabled", false)

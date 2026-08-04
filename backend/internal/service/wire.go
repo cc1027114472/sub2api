@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
@@ -683,7 +684,7 @@ var ProviderSet = wire.NewSet(
 	ProvideAuthCacheInvalidationWorker,
 	NewGroupService,
 	NewCompositeRouteResolver,
-	NewAccountService,
+	ProvideAccountService,
 	NewProxyService,
 	NewRedeemService,
 	NewPromoService,
@@ -693,7 +694,7 @@ var ProviderSet = wire.NewSet(
 	NewBillingService,
 	ProvideBillingCacheService,
 	NewAnnouncementService,
-	NewAdminService,
+	ProvideAdminService,
 	NewGatewayService,
 	NewOpenAIGatewayService,
 	ProvideImageStorageSettingService,
@@ -799,8 +800,86 @@ func ProvideUserPlatformQuotaUsageFlusher(cfg *config.Config, cache BillingCache
 
 // ProvidePaymentConfigService wraps NewPaymentConfigService to accept the named
 // payment.EncryptionKey type instead of raw []byte, avoiding Wire ambiguity.
+// On startup it best-effort migrates any leftover plaintext provider configs.
 func ProvidePaymentConfigService(entClient *dbent.Client, settingRepo SettingRepository, key payment.EncryptionKey) *PaymentConfigService {
-	return NewPaymentConfigService(entClient, settingRepo, []byte(key))
+	svc := NewPaymentConfigService(entClient, settingRepo, []byte(key))
+	if _, err := svc.MigratePlaintextProviderConfigs(context.Background()); err != nil {
+		slog.Warn("payment plaintext config migration failed", "error", err)
+	}
+	return svc
+}
+
+// ProvideAccountService wires AccountService with an upstream connection tester.
+func ProvideAccountService(accountRepo AccountRepository, groupRepo GroupRepository, tester *AccountTestService) *AccountService {
+	svc := NewAccountService(accountRepo, groupRepo)
+	svc.SetConnectionTester(tester)
+	return svc
+}
+
+// ProvideAdminService wires AdminService with OAuth credential refreshers for
+// manual RefreshAccountCredentials calls.
+func ProvideAdminService(
+	userRepo UserRepository,
+	groupRepo AdminGroupRepository,
+	accountRepo AdminAccountRepository,
+	proxyRepo ProxyRepository,
+	apiKeyRepo APIKeyRepository,
+	redeemCodeRepo RedeemCodeRepository,
+	userGroupRateRepo UserGroupRateRepository,
+	userRPMCache UserRPMCache,
+	billingCacheService *BillingCacheService,
+	proxyProber ProxyExitInfoProber,
+	proxyLatencyCache ProxyLatencyCache,
+	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	entClient *dbent.Client,
+	settingService *SettingService,
+	defaultSubAssigner DefaultSubscriptionAssigner,
+	userSubRepo UserSubscriptionRepository,
+	privacyClientFactory PrivacyClientFactory,
+	runtimeBlocker AccountRuntimeBlocker,
+	affiliateService *AffiliateService,
+	compositeRouteRepo CompositeModelRouteRepository,
+	compositeResolver *CompositeRouteResolver,
+	oauthService *OAuthService,
+	openaiOAuthService *OpenAIOAuthService,
+	geminiOAuthService *GeminiOAuthService,
+	antigravityOAuthService *AntigravityOAuthService,
+	grokOAuthService *GrokOAuthService,
+	tokenCacheInvalidator TokenCacheInvalidator,
+) AdminService {
+	svc := NewAdminService(
+		userRepo,
+		groupRepo,
+		accountRepo,
+		proxyRepo,
+		apiKeyRepo,
+		redeemCodeRepo,
+		userGroupRateRepo,
+		userRPMCache,
+		billingCacheService,
+		proxyProber,
+		proxyLatencyCache,
+		authCacheInvalidator,
+		entClient,
+		settingService,
+		defaultSubAssigner,
+		userSubRepo,
+		privacyClientFactory,
+		runtimeBlocker,
+		affiliateService,
+		compositeRouteRepo,
+		compositeResolver,
+	)
+	if impl, ok := svc.(*adminServiceImpl); ok {
+		impl.SetCredentialRefreshers([]TokenRefresher{
+			NewClaudeTokenRefresher(oauthService),
+			NewOpenAITokenRefresher(openaiOAuthService, accountRepo),
+			NewGeminiTokenRefresher(geminiOAuthService),
+			NewAntigravityTokenRefresher(antigravityOAuthService),
+			NewGrokTokenRefresher(grokOAuthService),
+		}, tokenCacheInvalidator)
+	}
+	return svc
 }
 
 // ProvideBalanceNotifyService creates BalanceNotifyService

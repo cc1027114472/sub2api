@@ -36,6 +36,9 @@ jobs:
       - name: Unit tests
         working-directory: backend
         run: make test-unit
+      - name: Unit tests with race detector
+        working-directory: backend
+        run: make test-unit-race
       - name: Integration tests
         working-directory: backend
         run: make test-integration

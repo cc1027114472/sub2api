@@ -1264,8 +1264,63 @@ func (s *adminServiceImpl) RefreshAccountCredentials(ctx context.Context, id int
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Implement refresh logic
-	return account, nil
+	if account == nil {
+		return nil, ErrAccountNotFound
+	}
+	if !account.IsOAuth() {
+		return nil, infraerrors.BadRequest("NOT_OAUTH", "cannot refresh non-OAuth account")
+	}
+	if account.IsCredentialShadow() {
+		return nil, infraerrors.BadRequest("SPARK_SHADOW_NO_REFRESH",
+			"cannot refresh spark shadow account; its credentials are managed by the parent account")
+	}
+
+	var refresher TokenRefresher
+	for _, candidate := range s.credentialRefreshers {
+		if candidate != nil && candidate.CanRefresh(account) {
+			refresher = candidate
+			break
+		}
+	}
+	if refresher == nil {
+		return nil, infraerrors.New(http.StatusNotImplemented, "REFRESH_UNSUPPORTED",
+			"no credential refresher registered for this account platform")
+	}
+
+	newCredentials, err := refresher.Refresh(ctx, account)
+	if err != nil {
+		if account.IsOpenAI() {
+			s.EnsureOpenAIPrivacy(ctx, account)
+		}
+		return nil, err
+	}
+
+	updatedAccount, err := s.UpdateAccount(ctx, account.ID, &UpdateAccountInput{
+		Credentials: newCredentials,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if s.tokenCacheInvalidator != nil {
+		if invalidateErr := s.tokenCacheInvalidator.InvalidateToken(ctx, updatedAccount); invalidateErr != nil {
+			slog.Warn("failed to invalidate token cache after credential refresh",
+				"account_id", updatedAccount.ID, "error", invalidateErr)
+		}
+	}
+
+	s.EnsureOpenAIPrivacy(ctx, updatedAccount)
+	s.EnsureAntigravityPrivacy(ctx, updatedAccount)
+	return updatedAccount, nil
+}
+
+// SetCredentialRefreshers injects platform OAuth refreshers for manual admin refresh.
+func (s *adminServiceImpl) SetCredentialRefreshers(refreshers []TokenRefresher, invalidator TokenCacheInvalidator) {
+	if s == nil {
+		return
+	}
+	s.credentialRefreshers = refreshers
+	s.tokenCacheInvalidator = invalidator
 }
 
 func (s *adminServiceImpl) ClearAccountError(ctx context.Context, id int64) (*Account, error) {

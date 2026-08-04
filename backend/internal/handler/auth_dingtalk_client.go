@@ -23,12 +23,32 @@ type dingTalkClientConfig struct {
 }
 
 type DingTalkClient struct {
-	cfg         dingTalkClientConfig
-	appToken    string
-	appTokenExp time.Time // 钉钉 7200s，留 200s 余量 → 7000s
-	mu          sync.Mutex
-	httpClient  *http.Client
-	// TODO(multi-instance): Redis 集中缓存 appToken
+	cfg           dingTalkClientConfig
+	appToken      string
+	appTokenExp   time.Time // 钉钉 7200s，留 200s 余量 → 7000s
+	mu            sync.Mutex
+	httpClient    *http.Client
+	appTokenStore dingTalkAppTokenStore
+}
+
+// dingTalkAppTokenStore is an optional shared cache (typically Redis) so multiple
+// instances do not stampede DingTalk /oauth2/accessToken.
+type dingTalkAppTokenStore interface {
+	Get(ctx context.Context, key string) (string, error)
+	Set(ctx context.Context, key, value string, ttl time.Duration) error
+}
+
+func (c *DingTalkClient) SetAppTokenStore(store dingTalkAppTokenStore) {
+	if c == nil {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.appTokenStore = store
+}
+
+func dingTalkAppTokenCacheKey(clientID string) string {
+	return "sub2api:dingtalk:app_token:" + strings.TrimSpace(clientID)
 }
 
 type DingTalkUserTokenResp struct {
@@ -158,6 +178,14 @@ func (c *DingTalkClient) GetAppToken(ctx context.Context) (string, error) {
 	if c.appToken != "" && time.Now().Before(c.appTokenExp) {
 		return c.appToken, nil
 	}
+	cacheKey := dingTalkAppTokenCacheKey(c.cfg.ClientID)
+	if c.appTokenStore != nil {
+		if cached, err := c.appTokenStore.Get(ctx, cacheKey); err == nil && strings.TrimSpace(cached) != "" {
+			c.appToken = cached
+			c.appTokenExp = time.Now().Add(50 * time.Minute)
+			return c.appToken, nil
+		}
+	}
 	body := map[string]string{"appKey": c.cfg.ClientID, "appSecret": c.cfg.ClientSecret}
 	payload, _ := json.Marshal(body)
 	// 钉钉新版 v1.0 企业内部应用 access_token: POST /v1.0/oauth2/accessToken
@@ -196,6 +224,9 @@ func (c *DingTalkClient) GetAppToken(ctx context.Context) (string, error) {
 		ttl -= 200
 	}
 	c.appTokenExp = time.Now().Add(time.Duration(ttl) * time.Second)
+	if c.appTokenStore != nil && ttl > 0 {
+		_ = c.appTokenStore.Set(ctx, cacheKey, c.appToken, time.Duration(ttl)*time.Second)
+	}
 	return c.appToken, nil
 }
 

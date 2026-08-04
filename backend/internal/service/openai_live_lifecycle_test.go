@@ -265,7 +265,28 @@ func TestRunLiveControllerClosesExpiredSession(t *testing.T) {
 	}
 }
 
-func TestFinalizeLiveCallIsIdempotentAndWritesZeroUsage(t *testing.T) {
+func TestEnsureLiveBillingEligibilityRejectsInsufficientBalance(t *testing.T) {
+	t.Parallel()
+
+	cache := &balanceEligibilityCacheStub{balance: 0}
+	cfg := &config.Config{}
+	cfg.Gateway.Live.RequireBillingEligibility = true
+	cfg.Billing.MinimumBalanceReserve = 0.01
+	billing := NewBillingCacheService(cache, nil, nil, nil, nil, nil, cfg, nil)
+	t.Cleanup(billing.Stop)
+
+	svc := &OpenAIGatewayService{
+		cfg:                 cfg,
+		billingCacheService: billing,
+	}
+	err := svc.ensureLiveBillingEligibility(context.Background(), LiveCallIdentity{UserID: 1})
+	require.ErrorIs(t, err, ErrInsufficientBalance)
+
+	cfg.Gateway.Live.RequireBillingEligibility = false
+	require.NoError(t, svc.ensureLiveBillingEligibility(context.Background(), LiveCallIdentity{UserID: 1}))
+}
+
+func TestFinalizeLiveCallIsIdempotentAndWritesUsage(t *testing.T) {
 	record := &LiveCallRecord{
 		CallID:          "call_secret",
 		CallHash:        hashLiveCallID("call_secret"),
@@ -275,7 +296,7 @@ func TestFinalizeLiveCallIsIdempotentAndWritesZeroUsage(t *testing.T) {
 		GroupID:         44,
 		LeaseID:         "lease-1",
 		Model:           "gpt-live-test",
-		CreatedAt:       time.Now().Add(-time.Second),
+		CreatedAt:       time.Now().Add(-time.Minute),
 		ExpiresAt:       time.Now().Add(time.Hour),
 		Controller:      LiveControllerPending,
 		InboundEndpoint: "/v1/live",
@@ -288,6 +309,9 @@ func TestFinalizeLiveCallIsIdempotentAndWritesZeroUsage(t *testing.T) {
 		cache:              store,
 		concurrencyService: NewConcurrencyService(concurrencyCache),
 		usageLogRepo:       usageRepo,
+		cfg: &config.Config{Gateway: config.GatewayConfig{Live: config.GatewayLiveConfig{
+			CostPerMinuteUSD: 0.06,
+		}}},
 	}
 
 	service.finalizeLiveCall(record)
@@ -306,8 +330,8 @@ func TestFinalizeLiveCallIsIdempotentAndWritesZeroUsage(t *testing.T) {
 	require.NotNil(t, log.DurationMs)
 	require.Zero(t, log.InputTokens)
 	require.Zero(t, log.OutputTokens)
-	require.Zero(t, log.TotalCost)
-	require.Zero(t, log.ActualCost)
+	require.InDelta(t, 0.06, log.TotalCost, 0.01)
+	require.InDelta(t, 0.06, log.ActualCost, 0.01)
 }
 
 func TestGetLiveCallForIdentityRejectsMismatchedCaller(t *testing.T) {

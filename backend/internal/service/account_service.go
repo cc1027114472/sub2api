@@ -201,8 +201,9 @@ type UpdateAccountRequest struct {
 
 // AccountService 账号管理服务
 type AccountService struct {
-	accountRepo AccountRepository
-	groupRepo   GroupRepository
+	accountRepo       AccountRepository
+	groupRepo         GroupRepository
+	connectionTester  AccountConnectionTester
 }
 
 type groupExistenceBatchChecker interface {
@@ -488,28 +489,4 @@ func (s *AccountService) GetCredential(ctx context.Context, id int64, key string
 	return account.GetCredential(key), nil
 }
 
-// TestCredentials 测试账号凭证是否有效（需要实现具体平台的测试逻辑）
-func (s *AccountService) TestCredentials(ctx context.Context, id int64) error {
-	account, err := s.accountRepo.GetByID(ctx, id)
-	if err != nil {
-		return fmt.Errorf("get account: %w", err)
-	}
-
-	// 根据平台执行不同的测试逻辑
-	switch account.Platform {
-	case PlatformAnthropic:
-		// TODO: 测试Anthropic API凭证
-		return nil
-	case PlatformOpenAI:
-		// TODO: 测试OpenAI API凭证
-		return nil
-	case PlatformGemini:
-		// TODO: 测试Gemini API凭证
-		return nil
-	case PlatformGrok:
-		// Grok OAuth credentials are validated via token exchange/refresh and request-path probes.
-		return nil
-	default:
-		return fmt.Errorf("unsupported platform: %s", account.Platform)
-	}
-}
+// TestCredentials is implemented in account_credentials.go.

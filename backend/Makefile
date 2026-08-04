@@ -1,4 +1,4 @@
-.PHONY: build generate test test-unit test-integration test-e2e
+.PHONY: build generate test test-unit test-unit-race test-integration test-e2e
 
 VERSION ?= $(shell ./scripts/resolve-version.sh)
 LDFLAGS ?= -s -w -X main.Version=$(VERSION)
@@ -16,6 +16,9 @@ test:
 
 test-unit:
 	go test -tags=unit ./...
+
+test-unit-race:
+	go test -tags=unit -race ./internal/service/ ./internal/handler/ ./internal/config/ ./internal/payment/
 
 test-integration:
 	go test -tags=integration ./...

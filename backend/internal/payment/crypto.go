@@ -17,10 +17,8 @@ const AES256KeySize = 32
 // The output format is "iv:authTag:ciphertext" where each component is base64-encoded,
 // matching the Node.js crypto.ts format for cross-compatibility.
 //
-// Deprecated: payment provider configs are now stored as plaintext JSON.
-// This function is kept only for seeding legacy ciphertext in tests and for
-// the transitional Decrypt fallback. Scheduled for removal after all live
-// deployments complete migration by re-saving their configs.
+// Payment provider configs are stored at-rest with this format. Plaintext JSON
+// records remain readable on the decrypt path only during migration.
 func Encrypt(plaintext string, key []byte) (string, error) {
 	if len(key) != AES256KeySize {
 		return "", fmt.Errorf("encryption key must be %d bytes, got %d", AES256KeySize, len(key))
@@ -59,11 +57,6 @@ func Encrypt(plaintext string, key []byte) (string, error) {
 
 // Decrypt decrypts a ciphertext string produced by Encrypt.
 // The input format is "iv:authTag:ciphertext" where each component is base64-encoded.
-//
-// Deprecated: payment provider configs are now stored as plaintext JSON.
-// This function remains only as a read-path fallback for pre-migration
-// ciphertext records. Scheduled for removal once all deployments re-save
-// their provider configs through the admin UI.
 func Decrypt(ciphertext string, key []byte) (string, error) {
 	if len(key) != AES256KeySize {
 		return "", fmt.Errorf("encryption key must be %d bytes, got %d", AES256KeySize, len(key))
@@ -108,4 +101,22 @@ func Decrypt(ciphertext string, key []byte) (string, error) {
 	}
 
 	return string(plaintext), nil
+}
+
+// LooksLikeCiphertext reports whether stored looks like Encrypt output
+// (three base64 segments separated by ':') rather than plaintext JSON.
+func LooksLikeCiphertext(stored string) bool {
+	parts := strings.SplitN(stored, ":", 3)
+	if len(parts) != 3 {
+		return false
+	}
+	for _, part := range parts {
+		if part == "" {
+			return false
+		}
+		if _, err := base64.StdEncoding.DecodeString(part); err != nil {
+			return false
+		}
+	}
+	return true
 }

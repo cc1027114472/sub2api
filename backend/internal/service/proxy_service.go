@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
+	"strings"
 	"time"
 
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
@@ -175,17 +178,26 @@ func (s *ProxyService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// TestConnection 测试代理连接（需要实现具体测试逻辑）
+// TestConnection 测试代理 TCP 连通性（不发送上游应用层请求）
 func (s *ProxyService) TestConnection(ctx context.Context, id int64) error {
 	proxy, err := s.proxyRepo.GetByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("get proxy: %w", err)
 	}
+	if proxy == nil {
+		return ErrProxyNotFound
+	}
+	host := strings.TrimSpace(proxy.Host)
+	if host == "" || proxy.Port <= 0 {
+		return infraerrors.BadRequest("PROXY_INVALID", "proxy host/port is invalid")
+	}
 
-	// TODO: 实现代理连接测试逻辑
-	// 可以尝试通过代理发送测试请求
-	_ = proxy
-
+	dialer := net.Dialer{Timeout: 5 * time.Second}
+	conn, err := dialer.DialContext(ctx, "tcp", net.JoinHostPort(host, strconv.Itoa(proxy.Port)))
+	if err != nil {
+		return infraerrors.BadRequest("PROXY_UNREACHABLE", fmt.Sprintf("proxy tcp connect failed: %v", err))
+	}
+	_ = conn.Close()
 	return nil
 }
 

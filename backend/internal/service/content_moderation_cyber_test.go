@@ -77,6 +77,7 @@ func TestRecordCyberPolicyEvent_DisabledWhenRiskControlOff(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil /* apiKeyRepo */,
 	)
 
 	svc.RecordCyberPolicyEvent(context.Background(), CyberPolicyRecordInput{
@@ -103,6 +104,7 @@ func TestRecordCyberPolicyEvent_WritesLogWhenEnabled(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil, // apiKeyRepo
 		nil,
 		nil, // emailService=nil: email path safely skipped
 	)
@@ -181,6 +183,7 @@ func TestRecordCyberPolicyEvent_CreateLogBeforeEmail(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil, // apiKeyRepo
 		nil,
 		nil, // emailService=nil: email path safely skipped; see doc comment above
 	)
@@ -237,6 +240,7 @@ func TestApplyFlaggedAccountSideEffects_PassesExcludeCyberFlag(t *testing.T) {
 	svc := NewContentModerationService(
 		&contentModerationTestSettingRepo{values: map[string]string{}},
 		repo, nil, nil, nil, nil, nil, nil,
+		nil /* apiKeyRepo */,
 	)
 	userID := int64(42)
 
@@ -259,6 +263,7 @@ func TestRecordCyberPolicyEvent_ExcludeFromBanCount_SkipsBanJudgment(t *testing.
 			SettingKeyContentModerationConfig: `{"cyber_policy_exclude_from_ban_count":true}`,
 		}},
 		repo, nil, nil, nil, nil, nil, nil,
+		nil /* apiKeyRepo */,
 	)
 
 	svc.RecordCyberPolicyEvent(context.Background(), CyberPolicyRecordInput{
@@ -286,6 +291,7 @@ func TestRecordCyberPolicyEvent_DefaultCountsTowardBan(t *testing.T) {
 			SettingKeyRiskControlEnabled: "true",
 		}},
 		repo, nil, nil, nil, nil, nil, nil,
+		nil /* apiKeyRepo */,
 	)
 
 	svc.RecordCyberPolicyEvent(context.Background(), CyberPolicyRecordInput{

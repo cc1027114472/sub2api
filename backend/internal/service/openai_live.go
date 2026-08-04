@@ -9,12 +9,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
 	"time"
 
+	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 	coderws "github.com/coder/websocket"
 	"github.com/google/uuid"
@@ -102,6 +104,43 @@ func (s *OpenAIGatewayService) liveMaxSessionDuration() time.Duration {
 	return defaultLiveMaxSessionDuration
 }
 
+func (s *OpenAIGatewayService) liveRequireBillingEligibility() bool {
+	if s == nil || s.cfg == nil {
+		return true
+	}
+	return s.cfg.Gateway.Live.RequireBillingEligibility
+}
+
+// ensureLiveBillingEligibility is a defense-in-depth gate before account selection.
+// Handler already calls CheckBillingEligibility; this re-checks balance/subscription
+// by identity IDs so CreateLiveCall cannot be abused if called without that preflight.
+// Duration billing is not applied yet (TotalCost stays 0 until Sprint 6).
+func (s *OpenAIGatewayService) ensureLiveBillingEligibility(ctx context.Context, identity LiveCallIdentity) error {
+	if !s.liveRequireBillingEligibility() {
+		return nil
+	}
+	if s.billingCacheService == nil {
+		return ErrBillingServiceUnavailable
+	}
+	if s.cfg != nil && s.cfg.RunMode == config.RunModeSimple {
+		return nil
+	}
+	if identity.SubscriptionID != nil && *identity.SubscriptionID > 0 && identity.GroupID != nil && *identity.GroupID > 0 {
+		subData, err := s.billingCacheService.GetSubscriptionStatus(ctx, identity.UserID, *identity.GroupID)
+		if err != nil {
+			return ErrBillingServiceUnavailable.WithCause(err)
+		}
+		if subData == nil || subData.Status != SubscriptionStatusActive {
+			return ErrSubscriptionInvalid
+		}
+		if time.Now().After(subData.ExpiresAt) {
+			return ErrSubscriptionInvalid
+		}
+		return nil
+	}
+	return s.billingCacheService.checkBalanceEligibility(ctx, identity.UserID)
+}
+
 func ValidateLiveCallRequest(request *LiveCallRequest) error {
 	if request == nil || strings.TrimSpace(request.SDP) == "" {
 		return errors.New("sdp is required")
@@ -128,6 +167,9 @@ func (s *OpenAIGatewayService) CreateLiveCall(
 	userMaxConcurrency int,
 ) (*LiveCallCreated, error) {
 	if err := ValidateLiveCallRequest(request); err != nil {
+		return nil, err
+	}
+	if err := s.ensureLiveBillingEligibility(ctx, identity); err != nil {
 		return nil, err
 	}
 	store, err := s.liveStore()
@@ -824,15 +866,12 @@ func (s *OpenAIGatewayService) finalizeLiveCall(record *LiveCallRecord) {
 	if record.SubscriptionID > 0 {
 		billingType = BillingTypeSubscription
 	}
-	// TODO(billing): Live 会话目前不计费：TotalCost/ActualCost 恒为 0，完全绕过
-	// recordUsageCore/applyUsageBilling，余额模式下极低余额也能反复开启最长
-	// liveMaxSessionDuration 的会话。若确认按时长计费，应在此接入计费管道；
-	// 若确认有意免费，删除本注释即可（零值行为由
-	// TestFinalizeLiveCallIsIdempotentAndWritesZeroUsage 锁定）。
-	//
-	// 这是该会话唯一一次落库机会（MarkLiveCallClosed 已标记 first），失败即永久
-	// 丢失，因此走带日志与同步兜底的 writeUsageLogBestEffort（issue #3656）。
-	writeUsageLogBestEffort(context.Background(), s.usageLogRepo, &UsageLog{
+	costPerMinute := 0.05
+	if s.cfg != nil {
+		costPerMinute = s.cfg.Gateway.Live.CostPerMinuteUSD
+	}
+	sessionCost := LiveSessionCostUSD(duration, costPerMinute)
+	usageLog := &UsageLog{
 		UserID:           record.UserID,
 		APIKeyID:         record.APIKeyID,
 		AccountID:        record.AccountID,
@@ -849,6 +888,53 @@ func (s *OpenAIGatewayService) finalizeLiveCall(record *LiveCallRecord) {
 		IPAddress:        &ipAddress,
 		InboundEndpoint:  &inboundEndpoint,
 		UpstreamEndpoint: &upstreamEndpoint,
+		TotalCost:        sessionCost,
+		ActualCost:       sessionCost,
 		CreatedAt:        record.CreatedAt,
-	}, "service.openai_live")
+	}
+	// First-writer only (MarkLiveCallClosed). Apply balance/subscription deduction
+	// when priced; always persist the usage row via best-effort writer.
+	if sessionCost > 0 {
+		s.applyLiveSessionBilling(context.Background(), record, usageLog, sessionCost)
+	}
+	writeUsageLogBestEffort(context.Background(), s.usageLogRepo, usageLog, "service.openai_live")
+}
+
+func (s *OpenAIGatewayService) applyLiveSessionBilling(ctx context.Context, record *LiveCallRecord, usageLog *UsageLog, sessionCost float64) {
+	if s == nil || record == nil || usageLog == nil || sessionCost <= 0 {
+		return
+	}
+	cost := &CostBreakdown{TotalCost: sessionCost, ActualCost: sessionCost}
+	params := &postUsageBillingParams{
+		Cost:               cost,
+		IsSubscriptionBill: record.SubscriptionID > 0,
+		Platform:           PlatformOpenAI,
+	}
+	if s.userRepo != nil {
+		if user, err := s.userRepo.GetByID(ctx, record.UserID); err == nil {
+			params.User = user
+		}
+	}
+	if s.accountRepo != nil {
+		if account, err := s.accountRepo.GetByID(ctx, record.AccountID); err == nil {
+			params.Account = account
+		}
+	}
+	if params.User == nil {
+		return
+	}
+	if params.Account == nil {
+		params.Account = &Account{ID: record.AccountID, Platform: PlatformOpenAI}
+	}
+	if params.APIKey == nil {
+		params.APIKey = &APIKey{ID: record.APIKeyID, UserID: record.UserID}
+		if record.GroupID > 0 {
+			gid := record.GroupID
+			params.APIKey.GroupID = &gid
+		}
+	}
+	if _, err := applyUsageBilling(ctx, record.CallHash, usageLog, params, s.billingDeps(), s.usageBillingRepo); err != nil {
+		slog.Warn("openai_live.apply_session_billing_failed",
+			"call_hash", record.CallHash, "user_id", record.UserID, "cost", sessionCost, "error", err)
+	}
 }

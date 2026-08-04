@@ -67,6 +67,10 @@ type migrationChecksumCompatibilityRule struct {
 // migrationChecksumCompatibilityRules 仅用于兼容历史上误修改过的迁移文件 checksum。
 // 规则必须同时匹配「迁移名 + 数据库 checksum + 当前文件 checksum」且两者都落在该迁移的已知版本集合内才会放行，
 // 避免放宽全局校验，也允许将误改的历史 migration 回滚为已发布版本而不要求人工修 checksum。
+//
+// FREEZE: Do not add new compatibility rules for newly authored migrations.
+// New migrations must never be edited after merge; fix forward with a new SQL file.
+// Emergency additions to this map require explicit review and changelog notes.
 var migrationChecksumCompatibilityRules = map[string]migrationChecksumCompatibilityRule{
 	"054_drop_legacy_cache_columns.sql":                       newMigrationChecksumCompatibilityRule("82de761156e03876653e7a6a4eee883cd927847036f779b0b9f34c42a8af7a7d", "182c193f3359946cf094090cd9e57d5c3fd9abaffbc1e8fc378646b8a6fa12b4"),
 	"061_add_usage_log_request_type.sql":                      newMigrationChecksumCompatibilityRule("66207e7aa5dd0429c2e2c0fabdaf79783ff157fa0af2e81adff2ee03790ec65c", "08a248652cbab7cfde147fc6ef8cda464f2477674e20b718312faa252e0481c0", "222b4a09c797c22e5922b6b172327c824f5463aaa8760e4f621bc5c22e2be0f3"),

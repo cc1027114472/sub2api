@@ -646,6 +646,8 @@ type adminServiceImpl struct {
 	affiliateService     adminRechargeAffiliateAccruer
 	compositeRouteRepo   CompositeModelRouteRepository
 	compositeResolver    *CompositeRouteResolver
+	credentialRefreshers []TokenRefresher
+	tokenCacheInvalidator TokenCacheInvalidator
 }
 
 type adminRechargeAffiliateAccruer interface {

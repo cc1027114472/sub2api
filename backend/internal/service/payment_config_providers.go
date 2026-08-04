@@ -490,25 +490,26 @@ func (s *PaymentConfigService) mergeConfig(ctx context.Context, id int64, newCon
 }
 
 // decryptConfig parses a stored provider config.
-// New records are plaintext JSON; legacy records are AES-256-GCM ciphertext
-// ("iv:authTag:ciphertext"). Values that cannot be parsed as either — including
-// legacy ciphertext with no/invalid TOTP_ENCRYPTION_KEY — are treated as empty,
-// letting the admin re-enter the config via the UI to complete the migration.
-//
-// TODO(deprecated-legacy-ciphertext): The AES fallback branch is a transitional
-// shim for pre-plaintext records. Remove it (and the encryptionKey field) after
-// a few releases once all live deployments have re-saved their provider configs.
+// Preferred format is AES-256-GCM ciphertext ("iv:authTag:ciphertext").
+// Plaintext JSON is accepted only as a read-path migration shim for records
+// written before at-rest encryption was restored.
 func (s *PaymentConfigService) decryptConfig(stored string) (map[string]string, error) {
 	if stored == "" {
 		return nil, nil
 	}
 	var cfg map[string]string
+	if len(s.encryptionKey) == payment.AES256KeySize && payment.LooksLikeCiphertext(stored) {
+		if plaintext, err := payment.Decrypt(stored, s.encryptionKey); err == nil {
+			if err := json.Unmarshal([]byte(plaintext), &cfg); err == nil {
+				return cfg, nil
+			}
+		}
+	}
+	// Legacy plaintext JSON fallback (pre-encryption-restore records).
 	if err := json.Unmarshal([]byte(stored), &cfg); err == nil {
 		return cfg, nil
 	}
-	// Deprecated: legacy AES-256-GCM ciphertext fallback — scheduled for removal.
 	if len(s.encryptionKey) == payment.AES256KeySize {
-		//nolint:staticcheck // SA1019: intentional legacy fallback, scheduled for removal
 		if plaintext, err := payment.Decrypt(stored, s.encryptionKey); err == nil {
 			if err := json.Unmarshal([]byte(plaintext), &cfg); err == nil {
 				return cfg, nil
@@ -532,13 +533,63 @@ func (s *PaymentConfigService) DeleteProviderInstance(ctx context.Context, id in
 	return s.entClient.PaymentProviderInstance.DeleteOneID(id).Exec(ctx)
 }
 
-// encryptConfig serialises a provider config for storage.
-// New records are written as plaintext JSON; the historical AES-GCM wrapping
-// has been dropped but decryptConfig still accepts old ciphertext during migration.
+// encryptConfig serialises a provider config for at-rest AES-256-GCM storage.
+// TOTP_ENCRYPTION_KEY (via payment.EncryptionKey) must be configured.
 func (s *PaymentConfigService) encryptConfig(cfg map[string]string) (string, error) {
 	data, err := json.Marshal(cfg)
 	if err != nil {
 		return "", fmt.Errorf("marshal config: %w", err)
 	}
-	return string(data), nil
+	if len(s.encryptionKey) != payment.AES256KeySize {
+		return "", infraerrors.BadRequest(
+			"PAYMENT_ENCRYPTION_KEY_REQUIRED",
+			"TOTP_ENCRYPTION_KEY must be configured (openssl rand -hex 32) before storing payment provider secrets",
+		)
+	}
+	encrypted, err := payment.Encrypt(string(data), s.encryptionKey)
+	if err != nil {
+		return "", fmt.Errorf("encrypt config: %w", err)
+	}
+	return encrypted, nil
+}
+
+// MigratePlaintextProviderConfigs encrypts any plaintext JSON provider configs
+// still stored in the database. Safe to call repeatedly; skips ciphertext rows.
+// Returns the number of rows rewritten. No-op when encryption key is absent.
+func (s *PaymentConfigService) MigratePlaintextProviderConfigs(ctx context.Context) (int, error) {
+	if s == nil || s.entClient == nil {
+		return 0, nil
+	}
+	if len(s.encryptionKey) != payment.AES256KeySize {
+		slog.Warn("payment plaintext config migration skipped: TOTP_ENCRYPTION_KEY not configured")
+		return 0, nil
+	}
+	instances, err := s.entClient.PaymentProviderInstance.Query().All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("list payment provider instances: %w", err)
+	}
+	migrated := 0
+	for _, inst := range instances {
+		if inst == nil || inst.Config == "" || payment.LooksLikeCiphertext(inst.Config) {
+			continue
+		}
+		var cfg map[string]string
+		if err := json.Unmarshal([]byte(inst.Config), &cfg); err != nil {
+			continue
+		}
+		enc, err := s.encryptConfig(cfg)
+		if err != nil {
+			return migrated, fmt.Errorf("encrypt instance %d: %w", inst.ID, err)
+		}
+		if err := s.entClient.PaymentProviderInstance.UpdateOneID(inst.ID).
+			SetConfig(enc).
+			Exec(ctx); err != nil {
+			return migrated, fmt.Errorf("update instance %d: %w", inst.ID, err)
+		}
+		migrated++
+	}
+	if migrated > 0 {
+		slog.Info("payment provider configs migrated to ciphertext", "count", migrated)
+	}
+	return migrated, nil
 }

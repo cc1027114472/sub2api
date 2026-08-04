@@ -3,12 +3,18 @@
 FRONTEND_CRITICAL_VITEST := \
 	src/api/__tests__/client.spec.ts \
 	src/api/__tests__/tokenRefresh.spec.ts \
+	src/api/__tests__/payment.spec.ts \
+	src/api/__tests__/settings.paymentVisibleMethods.spec.ts \
 	src/views/auth/__tests__/LinuxDoCallbackView.spec.ts \
 	src/views/auth/__tests__/WechatCallbackView.spec.ts \
 	src/views/user/__tests__/PaymentView.spec.ts \
 	src/views/user/__tests__/PaymentResultView.spec.ts \
 	src/components/user/profile/__tests__/ProfileInfoCard.spec.ts \
-	src/views/admin/__tests__/SettingsView.spec.ts
+	src/views/admin/__tests__/SettingsView.spec.ts \
+	src/views/admin/__tests__/RiskControlView.spec.ts \
+	src/features/prompt-audit/__tests__/PromptAuditView.spec.ts \
+	src/i18n/__tests__/riskControlLocales.spec.ts \
+	src/components/payment/__tests__/paymentFlow.spec.ts
 
 # 一键编译前后端
 build: build-backend build-frontend

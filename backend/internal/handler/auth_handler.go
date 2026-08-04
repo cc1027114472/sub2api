@@ -30,6 +30,20 @@ type AuthHandler struct {
 
 	dingTalkClientInstance *DingTalkClient
 	dingTalkClientMu       sync.Mutex
+	dingTalkAppTokenStore  dingTalkAppTokenStore
+}
+
+// SetDingTalkAppTokenStore injects a shared (Redis) cache for DingTalk app tokens.
+func (h *AuthHandler) SetDingTalkAppTokenStore(store dingTalkAppTokenStore) {
+	if h == nil {
+		return
+	}
+	h.dingTalkClientMu.Lock()
+	defer h.dingTalkClientMu.Unlock()
+	h.dingTalkAppTokenStore = store
+	if h.dingTalkClientInstance != nil {
+		h.dingTalkClientInstance.SetAppTokenStore(store)
+	}
 }
 
 // NewAuthHandler creates a new AuthHandler

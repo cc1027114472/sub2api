@@ -677,6 +677,59 @@ func TestUpdateProviderInstanceClearsAirwallexAccountID(t *testing.T) {
 	require.Equal(t, "client-id-test", cfg["clientId"])
 }
 
+func TestEncryptConfigStoresCiphertextAndMigratesPlaintext(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	client := newPaymentConfigServiceTestClient(t)
+	key := []byte("0123456789abcdef0123456789abcdef")
+	svc := &PaymentConfigService{
+		entClient:     client,
+		encryptionKey: key,
+	}
+
+	instance, err := svc.CreateProviderInstance(ctx, CreateProviderInstanceRequest{
+		ProviderKey: "easypay",
+		Name:        "encrypted-easypay",
+		Config: map[string]string{
+			"pid":       "1001",
+			"pkey":      "pkey-1001",
+			"apiBase":   "https://pay.example.com",
+			"notifyUrl": "https://merchant.example.com/notify",
+			"returnUrl": "https://merchant.example.com/return",
+		},
+		SupportedTypes: []string{"alipay"},
+		Enabled:        true,
+	})
+	require.NoError(t, err)
+
+	saved, err := client.PaymentProviderInstance.Get(ctx, instance.ID)
+	require.NoError(t, err)
+	require.True(t, payment.LooksLikeCiphertext(saved.Config), "new writes must be ciphertext")
+
+	plain := `{"pid":"legacy","pkey":"legacy-key","apiBase":"https://pay.example.com","notifyUrl":"https://n","returnUrl":"https://r"}`
+	legacy, err := client.PaymentProviderInstance.Create().
+		SetProviderKey("easypay").
+		SetName("legacy-plaintext").
+		SetConfig(plain).
+		SetSupportedTypes("alipay").
+		SetEnabled(true).
+		SetSortOrder(2).
+		Save(ctx)
+	require.NoError(t, err)
+
+	n, err := svc.MigratePlaintextProviderConfigs(ctx)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, n, 1)
+
+	migrated, err := client.PaymentProviderInstance.Get(ctx, legacy.ID)
+	require.NoError(t, err)
+	require.True(t, payment.LooksLikeCiphertext(migrated.Config))
+	cfg, err := svc.decryptConfig(migrated.Config)
+	require.NoError(t, err)
+	require.Equal(t, "legacy", cfg["pid"])
+}
+
 func createPendingProviderConfigOrder(t *testing.T, ctx context.Context, client *dbent.Client, instance *dbent.PaymentProviderInstance) {
 	t.Helper()
 

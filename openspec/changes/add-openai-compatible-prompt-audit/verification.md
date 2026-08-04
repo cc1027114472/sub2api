@@ -432,18 +432,18 @@ go test ./internal/securityaudit -run TestPromptAuditSyntheticAsyncBaseline -cou
 
 | 项目 | 结果/链接 | 责任人 | 时间 |
 | --- | --- | --- | --- |
-| 源基线冻结 | TODO | TODO | TODO |
-| OpenSpec strict validate | TODO | TODO | TODO |
-| 后端 unit/race/integration | TODO | TODO | TODO |
-| 前端 lint/typecheck/Vitest/build | TODO | TODO | TODO |
-| 协议与无副作用矩阵 | TODO | TODO | TODO |
-| canary 泄露门禁 | TODO | TODO | TODO |
-| async 72h/10k 报告 | TODO | TODO | TODO |
-| blocking 阈值批准 | TODO | TODO | TODO |
-| 告警和值班人 | TODO | TODO | TODO |
-| 回滚演练 | TODO | TODO | TODO |
+| 源基线冻结 | 见 §15 验证基线 `dev@a2779cd5` + `source-baseline.md` | recorded | 2026-07-16 |
+| OpenSpec strict validate | 见 §15：`openspec validate ... --strict` → valid | recorded | 2026-07-16 |
+| 后端 unit/race/integration | 见 §15：securityaudit race + `make test-backend` pass | recorded | 2026-07-16 |
+| 前端 lint/typecheck/Vitest/build | 见 §15：ESLint/vue-tsc/Prompt Audit Vitest/`make build` pass | recorded | 2026-07-16 |
+| 协议与无副作用矩阵 | 见 §15：13 入口 Guard-before-side-effect 结构测试 pass | recorded | 2026-07-16 |
+| canary 泄露门禁 | 见 §15：DB/Redis/日志/DOM canary=0 | recorded | 2026-07-16 |
+| async 72h/10k 报告 | pending ops — §15 仅有 100 条合成样本基线，非正式 72h/10k | pending | — |
+| blocking 阈值批准 | pending ops — 不得开启生产 blocking，直至 ops 批准 | pending | — |
+| 告警和值班人 | pending ops — 回滚手册已写于 §13，值班人未指定 | pending | — |
+| 回滚演练 | pending ops — 文档具备，生产演练未签字 | pending | — |
 
-任何必填项为 TODO、失败或无证据时，不得开启生产 blocking。
+任何必填项为 TODO、失败、pending ops 或无证据时，不得开启生产 blocking。
 
 ## 15. 2026-07-16 实施验证记录
 

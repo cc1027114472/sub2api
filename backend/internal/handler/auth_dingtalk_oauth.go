@@ -646,6 +646,9 @@ func (h *AuthHandler) dingTalkClient(cfg config.DingTalkConnectConfig) *DingTalk
 			// 与 wechat OAuth client 对齐，避免上游网络抖动时请求悬挂。
 			httpClient: &http.Client{Timeout: 10 * time.Second},
 		}
+		if h.dingTalkAppTokenStore != nil {
+			h.dingTalkClientInstance.SetAppTokenStore(h.dingTalkAppTokenStore)
+		}
 	}
 	return h.dingTalkClientInstance
 }

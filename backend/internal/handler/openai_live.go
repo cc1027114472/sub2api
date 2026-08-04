@@ -215,7 +215,7 @@ func (h *OpenAIGatewayHandler) LiveSideband(c *gin.Context) {
 		return
 	}
 	downstream, err := coderws.Accept(c.Writer, c.Request, &coderws.AcceptOptions{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: !h.liveSidebandOriginAllowed(c.Request),
 	})
 	if err != nil {
 		return
@@ -233,4 +233,37 @@ func liveEnabledForAPIKey(apiKey *service.APIKey) bool {
 		apiKey.Group != nil &&
 		apiKey.Group.Platform == service.PlatformOpenAI &&
 		apiKey.Group.AllowLive
+}
+
+// liveSidebandOriginAllowed returns true when the WebSocket Origin is safe to accept.
+// Non-browser clients (no Origin header) are allowed for API-key sideband use.
+// Browser Origins must match CORS allowed_origins, or the request Host.
+func (h *OpenAIGatewayHandler) liveSidebandOriginAllowed(r *http.Request) bool {
+	if r == nil {
+		return false
+	}
+	origin := strings.TrimSpace(r.Header.Get("Origin"))
+	if origin == "" {
+		return true
+	}
+	if h != nil && h.cfg != nil {
+		for _, allowed := range h.cfg.CORS.AllowedOrigins {
+			allowed = strings.TrimSpace(allowed)
+			if allowed == "" {
+				continue
+			}
+			if allowed == "*" || strings.EqualFold(allowed, origin) {
+				return true
+			}
+		}
+	}
+	parsed, err := url.Parse(origin)
+	if err != nil || parsed.Host == "" {
+		return false
+	}
+	reqHost := strings.TrimSpace(r.Host)
+	if reqHost == "" {
+		return false
+	}
+	return strings.EqualFold(parsed.Host, reqHost)
 }

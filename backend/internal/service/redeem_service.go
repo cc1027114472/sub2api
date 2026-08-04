@@ -639,17 +639,45 @@ func (s *RedeemService) Delete(ctx context.Context, id int64) error {
 
 // GetStats 获取兑换码统计信息
 func (s *RedeemService) GetStats(ctx context.Context) (map[string]any, error) {
-	// TODO: 实现统计逻辑
-	// 统计未使用、已使用的兑换码数量
-	// 统计总面值等
-
-	stats := map[string]any{
-		"total_codes":  0,
-		"unused_codes": 0,
-		"used_codes":   0,
-		"total_value":  0.0,
+	params := pagination.PaginationParams{Page: 1, PageSize: 1}
+	_, totalPag, err := s.redeemRepo.ListWithFilters(ctx, params, "", "", "")
+	if err != nil {
+		return nil, fmt.Errorf("count redeem codes: %w", err)
+	}
+	_, unusedPag, err := s.redeemRepo.ListWithFilters(ctx, params, "", StatusUnused, "")
+	if err != nil {
+		return nil, fmt.Errorf("count unused redeem codes: %w", err)
+	}
+	_, usedPag, err := s.redeemRepo.ListWithFilters(ctx, params, "", StatusUsed, "")
+	if err != nil {
+		return nil, fmt.Errorf("count used redeem codes: %w", err)
 	}
 
+	totalValue := 0.0
+	valueParams := pagination.PaginationParams{Page: 1, PageSize: 200}
+	for {
+		codes, page, listErr := s.redeemRepo.ListWithFilters(ctx, valueParams, "", "", "")
+		if listErr != nil {
+			return nil, fmt.Errorf("sum redeem code values: %w", listErr)
+		}
+		for _, code := range codes {
+			totalValue = MoneyAdd(totalValue, code.Value)
+		}
+		if page == nil || valueParams.Page*valueParams.PageSize >= int(page.Total) || len(codes) == 0 {
+			break
+		}
+		valueParams.Page++
+		if valueParams.Page > 1000 {
+			break
+		}
+	}
+
+	stats := map[string]any{
+		"total_codes":  totalPag.Total,
+		"unused_codes": unusedPag.Total,
+		"used_codes":   usedPag.Total,
+		"total_value":  totalValue,
+	}
 	return stats, nil
 }
 
