@@ -235,8 +235,8 @@ const activeBaseUrl = computed(() => {
 
 // Models
 const defaultFallbackModels = [
-  'gemini-3-flash',
-  'gemini-2.5-flash',
+  'gemini-3.8-flash-high',
+  'gemini-3.7-flash-high',
   'claude-sonnet-4-6',
   'gpt-4o-mini',
   'gpt-4o'
@@ -273,17 +273,17 @@ const pickRecommendedModelForProtocol = (proto: ProtocolId, current: string): st
   }
 
   if (proto === 'geminiNative') {
-    if (current && current.toLowerCase().includes('gemini')) {
+    if (current && current.toLowerCase().includes('gemini') && current !== 'gemini-3-flash') {
       return current
     }
-    return findMatch(['gemini-3-flash', 'gemini-2.5-flash', 'gemini']) || 'gemini-3-flash'
+    return findMatch(['gemini-3.8-flash-high', 'gemini-3.7-flash-high', 'gemini-3.6-flash-high', 'gemini-3-pro', 'gemini']) || 'gemini-3.8-flash-high'
   }
 
   if (proto === 'openaiChat' || proto === 'openaiResponses') {
-    if (current && models.includes(current)) {
+    if (current && models.includes(current) && current !== 'gemini-3-flash') {
       return current
     }
-    return findMatch(['gemini-3-flash', 'gpt-4o', 'gemini', 'gpt']) || models[0] || 'gemini-3-flash'
+    return findMatch(['gemini-3.8-flash-high', 'gemini-3.7-flash-high', 'gpt-4o', 'gemini', 'gpt']) || models[0] || 'gemini-3.8-flash-high'
   }
 
   return current
@@ -314,9 +314,9 @@ watch(activeProtocol, (newProto) => {
 
 const effectiveModel = computed(() => {
   if (selectedModel.value === '__custom__') {
-    return customModelInput.value.trim() || 'gemini-3-flash'
+    return customModelInput.value.trim() || 'gemini-3.8-flash-high'
   }
-  return selectedModel.value || 'gemini-3-flash'
+  return selectedModel.value || 'gemini-3.8-flash-high'
 })
 
 const protocols = computed(() => [

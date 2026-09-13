@@ -60,7 +60,7 @@ describe('PostmanTestModal', () => {
         apiKey: 'sk-test-key-123456',
         baseUrl: 'https://ukapi.cc',
         platform: 'antigravity',
-        allowedModels: ['gemini-3-flash']
+        allowedModels: ['gemini-3.8-flash-high']
       },
       global: {
         stubs: {
@@ -73,7 +73,7 @@ describe('PostmanTestModal', () => {
     const code = wrapper.find('pre code').text()
     expect(code).toContain('curl -X POST "https://ukapi.cc/v1/chat/completions"')
     expect(code).toContain('-H "Authorization: Bearer sk-test-key-123456"')
-    expect(code).toContain('"model": "gemini-3-flash"')
+    expect(code).toContain('"model": "gemini-3.8-flash-high"')
   })
 
   it('switches to Claude Messages and updates cURL command', async () => {
@@ -135,7 +135,7 @@ describe('PostmanTestModal', () => {
         apiKey: 'sk-test-key-123456',
         baseUrl: 'https://ukapi.cc',
         platform: 'antigravity',
-        allowedModels: ['gemini-3-flash']
+        allowedModels: ['gemini-3.8-flash-high']
       },
       global: {
         stubs: {
@@ -161,7 +161,7 @@ describe('PostmanTestModal', () => {
         apiKey: 'sk-test-key-123456',
         baseUrl: 'https://ukapi.cc',
         platform: 'antigravity',
-        allowedModels: ['gemini-3-flash', 'claude-sonnet-4-6']
+        allowedModels: ['gemini-3.8-flash-high', 'claude-sonnet-4-6']
       },
       global: {
         stubs: {
@@ -173,15 +173,15 @@ describe('PostmanTestModal', () => {
 
     const buttons = wrapper.findAll('nav[aria-label="Protocol Tabs"] button')
 
-    // Default is openaiChat -> gemini-3-flash
-    expect(wrapper.find('pre code').text()).toContain('"model": "gemini-3-flash"')
+    // Default is openaiChat -> gemini-3.8-flash-high
+    expect(wrapper.find('pre code').text()).toContain('"model": "gemini-3.8-flash-high"')
 
     // Switch to Claude -> should auto-switch to claude-sonnet-4-6
     await buttons[1].trigger('click')
     expect(wrapper.find('pre code').text()).toContain('"model": "claude-sonnet-4-6"')
 
-    // Switch to Gemini -> should auto-switch to gemini-3-flash
+    // Switch to Gemini -> should auto-switch to gemini-3.8-flash-high
     await buttons[2].trigger('click')
-    expect(wrapper.find('pre code').text()).toContain('gemini-3-flash:generateContent')
+    expect(wrapper.find('pre code').text()).toContain('gemini-3.8-flash-high:generateContent')
   })
 })

@@ -133,7 +133,7 @@ export default {
       subtitle: '包含 4 种主流 API 协议的完整 cURL，可一键复制并直接导入 Postman 快速验证。',
       selectModel: '测试模型',
       customModelOption: '自定义模型',
-      customModelPlaceholder: '输入模型名称，如 gemini-3-flash',
+      customModelPlaceholder: '输入模型名称，如 gemini-3.8-flash-high',
       copyCurl: '复制 cURL (支持 Postman 导入)',
       copyBody: '复制 JSON 请求体',
       copyEndpoint: '复制 Endpoint',

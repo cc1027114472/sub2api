@@ -133,7 +133,7 @@ export default {
       subtitle: 'Includes complete cURL commands for 4 major protocols, ready to import and test in Postman.',
       selectModel: 'Test Model',
       customModelOption: 'Custom Model',
-      customModelPlaceholder: 'Type model name, e.g. gemini-3-flash',
+      customModelPlaceholder: 'Type model name, e.g. gemini-3.8-flash-high',
       copyCurl: 'Copy cURL (Ready for Postman)',
       copyBody: 'Copy JSON Body',
       copyEndpoint: 'Copy Endpoint',
