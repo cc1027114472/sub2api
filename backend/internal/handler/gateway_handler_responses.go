@@ -263,7 +263,17 @@ func (h *GatewayHandler) Responses(c *gin.Context) {
 		}
 		var result *service.ForwardResult
 		setActualUpstreamEndpoint(c, "")
-		if shouldUseAntigravityCompat(account) {
+		if isAntigravityUpstreamAccount(account) {
+			if h.antigravityGatewayService == nil {
+				h.responsesErrorResponse(c, http.StatusBadGateway, "upstream_error", "Antigravity gateway service is not configured")
+				if accountReleaseFunc != nil {
+					accountReleaseFunc()
+				}
+				return
+			}
+			setActualUpstreamEndpoint(c, "/v1/responses")
+			result, err = h.antigravityGatewayService.ForwardUpstreamResponses(requestCtx, c, account, forwardBody)
+		} else if shouldUseAntigravityCompat(account) {
 			if h.antigravityGatewayService == nil {
 				h.responsesErrorResponse(c, http.StatusBadGateway, "upstream_error", "Antigravity compatibility service is not configured")
 				if accountReleaseFunc != nil {

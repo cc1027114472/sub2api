@@ -249,6 +249,46 @@ const availableModels = computed(() => {
   return defaultFallbackModels
 })
 
+// Protocol tabs
+type ProtocolId = 'openaiChat' | 'claudeMessages' | 'geminiNative' | 'openaiResponses'
+const activeProtocol = ref<ProtocolId>('openaiChat')
+
+const pickRecommendedModelForProtocol = (proto: ProtocolId, current: string): string => {
+  const models = availableModels.value
+  if (!models || models.length === 0) return current
+
+  const findMatch = (keywords: string[]) => {
+    for (const kw of keywords) {
+      const match = models.find(m => m.toLowerCase().includes(kw))
+      if (match) return match
+    }
+    return null
+  }
+
+  if (proto === 'claudeMessages') {
+    if (current && current.toLowerCase().includes('claude')) {
+      return current
+    }
+    return findMatch(['claude', 'sonnet', 'opus', 'haiku']) || 'claude-sonnet-4-6'
+  }
+
+  if (proto === 'geminiNative') {
+    if (current && current.toLowerCase().includes('gemini')) {
+      return current
+    }
+    return findMatch(['gemini-3-flash', 'gemini-2.5-flash', 'gemini']) || 'gemini-3-flash'
+  }
+
+  if (proto === 'openaiChat' || proto === 'openaiResponses') {
+    if (current && models.includes(current)) {
+      return current
+    }
+    return findMatch(['gemini-3-flash', 'gpt-4o', 'gemini', 'gpt']) || models[0] || 'gemini-3-flash'
+  }
+
+  return current
+}
+
 const selectedModel = ref('')
 const customModelInput = ref('')
 
@@ -257,13 +297,20 @@ watch(
   () => props.allowedModels,
   (models) => {
     if (models && models.length > 0) {
-      selectedModel.value = models[0]
+      selectedModel.value = pickRecommendedModelForProtocol(activeProtocol.value, models[0])
     } else {
-      selectedModel.value = defaultFallbackModels[0]
+      selectedModel.value = pickRecommendedModelForProtocol(activeProtocol.value, defaultFallbackModels[0])
     }
   },
   { immediate: true }
 )
+
+// Auto switch recommended model when tab changes
+watch(activeProtocol, (newProto) => {
+  if (selectedModel.value !== '__custom__') {
+    selectedModel.value = pickRecommendedModelForProtocol(newProto, selectedModel.value)
+  }
+})
 
 const effectiveModel = computed(() => {
   if (selectedModel.value === '__custom__') {
@@ -271,11 +318,6 @@ const effectiveModel = computed(() => {
   }
   return selectedModel.value || 'gemini-3-flash'
 })
-
-// Protocol tabs
-type ProtocolId = 'openaiChat' | 'claudeMessages' | 'geminiNative' | 'openaiResponses'
-
-const activeProtocol = ref<ProtocolId>('openaiChat')
 
 const protocols = computed(() => [
   {

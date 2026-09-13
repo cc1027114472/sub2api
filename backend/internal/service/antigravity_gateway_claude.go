@@ -30,7 +30,7 @@ import (
 func (s *AntigravityGatewayService) Forward(ctx context.Context, c *gin.Context, account *Account, body []byte, isStickySession bool) (*ForwardResult, error) {
 	beginUpstreamResponseModelObservation(c)
 	// 上游透传账号直接转发，不走 OAuth token 刷新
-	if account.Type == AccountTypeUpstream {
+	if account.Type == AccountTypeUpstream || (account.Type == AccountTypeAPIKey && strings.TrimSpace(account.GetCredential("base_url")) != "") {
 		return s.ForwardUpstream(ctx, c, account, body)
 	}
 

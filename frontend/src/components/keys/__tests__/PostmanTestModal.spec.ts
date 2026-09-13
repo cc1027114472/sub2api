@@ -153,4 +153,35 @@ describe('PostmanTestModal', () => {
     expect(code).toContain('-H "Authorization: Bearer sk-test-key-123456"')
     expect(code).toContain('"input":')
   })
+
+  it('automatically recommends appropriate model when switching tabs', async () => {
+    const wrapper = mount(PostmanTestModal, {
+      props: {
+        show: true,
+        apiKey: 'sk-test-key-123456',
+        baseUrl: 'https://ukapi.cc',
+        platform: 'antigravity',
+        allowedModels: ['gemini-3-flash', 'claude-sonnet-4-6']
+      },
+      global: {
+        stubs: {
+          BaseDialog: { template: '<div><slot /></div>' },
+          Icon: { template: '<span />' }
+        }
+      }
+    })
+
+    const buttons = wrapper.findAll('nav[aria-label="Protocol Tabs"] button')
+
+    // Default is openaiChat -> gemini-3-flash
+    expect(wrapper.find('pre code').text()).toContain('"model": "gemini-3-flash"')
+
+    // Switch to Claude -> should auto-switch to claude-sonnet-4-6
+    await buttons[1].trigger('click')
+    expect(wrapper.find('pre code').text()).toContain('"model": "claude-sonnet-4-6"')
+
+    // Switch to Gemini -> should auto-switch to gemini-3-flash
+    await buttons[2].trigger('click')
+    expect(wrapper.find('pre code').text()).toContain('gemini-3-flash:generateContent')
+  })
 })

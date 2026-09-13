@@ -346,3 +346,10 @@ func shouldUseAntigravityCompat(account *service.Account) bool {
 		account.Platform == service.PlatformAntigravity &&
 		account.Type == service.AccountTypeOAuth
 }
+
+func isAntigravityUpstreamAccount(account *service.Account) bool {
+	if account == nil || account.Platform != service.PlatformAntigravity {
+		return false
+	}
+	return account.Type == service.AccountTypeUpstream || (account.Type == service.AccountTypeAPIKey && strings.TrimSpace(account.GetCredential("base_url")) != "")
+}

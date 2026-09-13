@@ -36,7 +36,7 @@ func newOpenAIWSPassthroughHandlerHarness(t *testing.T, upstreamURL string) *ope
 		service.SettingKeyCyberSessionBlockTTLSeconds: "60",
 	}}
 	moderationRepo := &contentModerationHandlerTestRepo{}
-	moderationSvc := service.NewContentModerationService(settingRepo, moderationRepo, nil, nil, nil, nil, nil, nil)
+	moderationSvc := service.NewContentModerationService(settingRepo, moderationRepo, nil, nil, nil, nil, nil, nil, nil)
 	settingSvc := service.NewSettingService(settingRepo, nil)
 
 	groupID := int64(4301)

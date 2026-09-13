@@ -15,6 +15,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/pkg/antigravity"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/gjson"
 )
 
 // ForwardUpstream 使用 base_url + /v1/messages + 双 header 认证透传上游 Claude 请求
@@ -162,6 +163,23 @@ func (s *AntigravityGatewayService) ForwardUpstream(ctx context.Context, c *gin.
 
 // streamUpstreamResponse 透传上游 SSE 流并提取 Claude usage
 func (s *AntigravityGatewayService) streamUpstreamResponse(c *gin.Context, resp *http.Response, startTime time.Time) *antigravityStreamResult {
+	return s.streamUpstreamGeneric(c, resp, startTime, "antigravity upstream", "event: ping\ndata: {\"type\": \"ping\"}\n\n", func(line string, usage *ClaudeUsage) {
+		if data, ok := extractAnthropicSSEDataLine(line); ok {
+			upstreamResponseModelObserverFromContext(c).ObserveAnthropic([]byte(strings.TrimSpace(data)))
+		}
+		s.extractSSEUsage(line, usage)
+	})
+}
+
+// streamUpstreamGeneric 透传上游 SSE 流通用实现
+func (s *AntigravityGatewayService) streamUpstreamGeneric(
+	c *gin.Context,
+	resp *http.Response,
+	startTime time.Time,
+	logTag string,
+	pingMsg string,
+	handler func(line string, usage *ClaudeUsage),
+) *antigravityStreamResult {
 	usage := &ClaudeUsage{}
 	var firstTokenMs *int
 
@@ -216,7 +234,6 @@ func (s *AntigravityGatewayService) streamUpstreamResponse(c *gin.Context, resp 
 		intervalCh = intervalTicker.C
 	}
 
-	// 下游 keepalive：防止代理/Cloudflare Tunnel 因连接空闲而断开
 	keepaliveInterval := time.Duration(0)
 	if s.settingService.cfg != nil && s.settingService.cfg.Gateway.StreamKeepaliveInterval > 0 {
 		keepaliveInterval = time.Duration(s.settingService.cfg.Gateway.StreamKeepaliveInterval) * time.Second
@@ -233,7 +250,7 @@ func (s *AntigravityGatewayService) streamUpstreamResponse(c *gin.Context, resp 
 	lastDataAt := time.Now()
 
 	flusher, _ := c.Writer.(http.Flusher)
-	cw := newAntigravityClientWriter(c.Writer, flusher, "antigravity upstream")
+	cw := newAntigravityClientWriter(c.Writer, flusher, logTag)
 
 	for {
 		select {
@@ -242,30 +259,25 @@ func (s *AntigravityGatewayService) streamUpstreamResponse(c *gin.Context, resp 
 				return &antigravityStreamResult{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: cw.Disconnected()}
 			}
 			if ev.err != nil {
-				if disconnect, handled := handleStreamReadError(ev.err, cw.Disconnected(), "antigravity upstream"); handled {
+				if disconnect, handled := handleStreamReadError(ev.err, cw.Disconnected(), logTag); handled {
 					return &antigravityStreamResult{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: disconnect}
 				}
-				logger.LegacyPrintf("service.antigravity_gateway", "Stream read error (antigravity upstream): %v", ev.err)
+				logger.LegacyPrintf("service.antigravity_gateway", "Stream read error (%s): %v", logTag, ev.err)
 				return &antigravityStreamResult{usage: usage, firstTokenMs: firstTokenMs}
 			}
 
 			lastDataAt = time.Now()
-
 			line := ev.line
-			if data, ok := extractAnthropicSSEDataLine(line); ok {
-				upstreamResponseModelObserverFromContext(c).ObserveAnthropic([]byte(strings.TrimSpace(data)))
-			}
 
-			// 记录首 token 时间
 			if firstTokenMs == nil && len(line) > 0 {
 				ms := int(time.Since(startTime).Milliseconds())
 				firstTokenMs = &ms
 			}
 
-			// 尝试从 message_delta 或 message_stop 事件提取 usage
-			s.extractSSEUsage(line, usage)
+			if handler != nil {
+				handler(line, usage)
+			}
 
-			// 透传行
 			cw.Fprintf("%s\n", line)
 
 		case <-intervalCh:
@@ -274,10 +286,10 @@ func (s *AntigravityGatewayService) streamUpstreamResponse(c *gin.Context, resp 
 				continue
 			}
 			if cw.Disconnected() {
-				logger.LegacyPrintf("service.antigravity_gateway", "Upstream timeout after client disconnect (antigravity upstream), returning collected usage")
+				logger.LegacyPrintf("service.antigravity_gateway", "Upstream timeout after client disconnect (%s), returning collected usage", logTag)
 				return &antigravityStreamResult{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: true}
 			}
-			logger.LegacyPrintf("service.antigravity_gateway", "Stream data interval timeout (antigravity upstream)")
+			logger.LegacyPrintf("service.antigravity_gateway", "Stream data interval timeout (%s)", logTag)
 			return &antigravityStreamResult{usage: usage, firstTokenMs: firstTokenMs}
 
 		case <-keepaliveCh:
@@ -287,10 +299,12 @@ func (s *AntigravityGatewayService) streamUpstreamResponse(c *gin.Context, resp 
 			if time.Since(lastDataAt) < keepaliveInterval {
 				continue
 			}
-			// SSE ping 事件：Anthropic 原生格式，客户端会正确处理，
-			// 同时保持连接活跃防止 Cloudflare Tunnel 等代理断开
-			if !cw.Fprintf("event: ping\ndata: {\"type\": \"ping\"}\n\n") {
-				logger.LegacyPrintf("service.antigravity_gateway", "Client disconnected during keepalive ping (antigravity upstream), continuing to drain upstream for billing")
+			msg := pingMsg
+			if msg == "" {
+				msg = ": ping\n\n"
+			}
+			if !cw.Fprintf("%s", msg) {
+				logger.LegacyPrintf("service.antigravity_gateway", "Client disconnected during keepalive ping (%s), continuing to drain upstream for billing", logTag)
 				continue
 			}
 		}
@@ -380,4 +394,440 @@ func (s *AntigravityGatewayService) extractClaudeUsage(body []byte) *ClaudeUsage
 		}
 	}
 	return usage
+}
+
+// ForwardUpstreamChatCompletions forwards OpenAI Chat Completions requests to the upstream base_url + /v1/chat/completions
+func (s *AntigravityGatewayService) ForwardUpstreamChatCompletions(ctx context.Context, c *gin.Context, account *Account, body []byte) (*ForwardResult, error) {
+	beginUpstreamResponseModelObservation(c)
+	startTime := time.Now()
+	sessionID := getSessionID(c)
+	prefix := logPrefix(sessionID, account.Name)
+
+	baseURL := strings.TrimSpace(account.GetCredential("base_url"))
+	apiKey := strings.TrimSpace(account.GetCredential("api_key"))
+	if baseURL == "" || apiKey == "" {
+		return nil, fmt.Errorf("upstream account missing base_url or api_key")
+	}
+	baseURL = strings.TrimSuffix(baseURL, "/")
+
+	model := gjson.GetBytes(body, "model").String()
+	if strings.TrimSpace(model) == "" {
+		return nil, fmt.Errorf("missing model")
+	}
+	stream := gjson.GetBytes(body, "stream").Bool()
+
+	upstreamURL := baseURL + "/v1/chat/completions"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, upstreamURL, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("create upstream request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	proxyURL := ""
+	if account.ProxyID != nil && account.Proxy != nil {
+		proxyURL = account.Proxy.URL()
+	}
+
+	resp, err := s.httpUpstream.Do(req, proxyURL, account.ID, account.Concurrency)
+	if err != nil {
+		logger.LegacyPrintf("service.antigravity_gateway", "%s chat completions upstream request failed: %v", prefix, err)
+		return nil, fmt.Errorf("upstream request failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode >= 400 {
+		respBody := s.readUpstreamErrorBody(resp)
+		if resp.StatusCode == http.StatusTooManyRequests {
+			s.handleUpstreamError(ctx, prefix, account, resp.StatusCode, resp.Header, respBody, model, 0, "", false)
+		}
+		c.Header("Content-Type", resp.Header.Get("Content-Type"))
+		c.Status(resp.StatusCode)
+		_, _ = c.Writer.Write(respBody)
+		return &ForwardResult{
+			Model: model,
+		}, nil
+	}
+
+	var usage *ClaudeUsage
+	var firstTokenMs *int
+	var clientDisconnect bool
+
+	if stream {
+		c.Header("Content-Type", "text/event-stream")
+		c.Header("Cache-Control", "no-cache")
+		c.Header("Connection", "keep-alive")
+		c.Header("X-Accel-Buffering", "no")
+		c.Status(http.StatusOK)
+
+		streamRes := s.streamUpstreamGeneric(c, resp, startTime, "antigravity cc upstream", ": ping\n\n", func(line string, u *ClaudeUsage) {
+			if strings.HasPrefix(line, "data: ") {
+				data := strings.TrimPrefix(line, "data: ")
+				if strings.TrimSpace(data) != "[DONE]" {
+					upstreamResponseModelObserverFromContext(c).ObserveOpenAI([]byte(data), "")
+					s.extractOpenAISSEUsage(line, u)
+				}
+			}
+		})
+		usage = streamRes.usage
+		firstTokenMs = streamRes.firstTokenMs
+		clientDisconnect = streamRes.clientDisconnect
+	} else {
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read upstream response: %w", err)
+		}
+		upstreamResponseModelObserverFromContext(c).ObserveOpenAI(respBody, "")
+		usage = s.extractOpenAIUsage(respBody)
+
+		c.Header("Content-Type", resp.Header.Get("Content-Type"))
+		c.Status(http.StatusOK)
+		_, _ = c.Writer.Write(respBody)
+	}
+
+	duration := time.Since(startTime)
+	logger.LegacyPrintf("service.antigravity_gateway", "%s chat completions status=success duration_ms=%d", prefix, duration.Milliseconds())
+
+	finalUsage := ClaudeUsage{}
+	if usage != nil {
+		finalUsage = *usage
+	}
+
+	return &ForwardResult{
+		Model:                         model,
+		UpstreamResponseModel:         observedUpstreamResponseModel(c),
+		UpstreamResponseModelConflict: observedUpstreamResponseModelConflict(c),
+		Stream:                        stream,
+		Duration:                      duration,
+		FirstTokenMs:                  firstTokenMs,
+		ClientDisconnect:              clientDisconnect,
+		UpstreamHeaders:               resp.Header,
+		Usage:                         finalUsage,
+	}, nil
+}
+
+// ForwardUpstreamResponses forwards OpenAI Responses requests to the upstream base_url + /v1/responses
+func (s *AntigravityGatewayService) ForwardUpstreamResponses(ctx context.Context, c *gin.Context, account *Account, body []byte) (*ForwardResult, error) {
+	beginUpstreamResponseModelObservation(c)
+	startTime := time.Now()
+	sessionID := getSessionID(c)
+	prefix := logPrefix(sessionID, account.Name)
+
+	baseURL := strings.TrimSpace(account.GetCredential("base_url"))
+	apiKey := strings.TrimSpace(account.GetCredential("api_key"))
+	if baseURL == "" || apiKey == "" {
+		return nil, fmt.Errorf("upstream account missing base_url or api_key")
+	}
+	baseURL = strings.TrimSuffix(baseURL, "/")
+
+	model := gjson.GetBytes(body, "model").String()
+	if strings.TrimSpace(model) == "" {
+		return nil, fmt.Errorf("missing model")
+	}
+	stream := gjson.GetBytes(body, "stream").Bool()
+
+	upstreamURL := baseURL + "/v1/responses"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, upstreamURL, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("create upstream request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	proxyURL := ""
+	if account.ProxyID != nil && account.Proxy != nil {
+		proxyURL = account.Proxy.URL()
+	}
+
+	resp, err := s.httpUpstream.Do(req, proxyURL, account.ID, account.Concurrency)
+	if err != nil {
+		logger.LegacyPrintf("service.antigravity_gateway", "%s responses upstream request failed: %v", prefix, err)
+		return nil, fmt.Errorf("upstream request failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode >= 400 {
+		respBody := s.readUpstreamErrorBody(resp)
+		if resp.StatusCode == http.StatusTooManyRequests {
+			s.handleUpstreamError(ctx, prefix, account, resp.StatusCode, resp.Header, respBody, model, 0, "", false)
+		}
+		c.Header("Content-Type", resp.Header.Get("Content-Type"))
+		c.Status(resp.StatusCode)
+		_, _ = c.Writer.Write(respBody)
+		return &ForwardResult{
+			Model: model,
+		}, nil
+	}
+
+	var usage *ClaudeUsage
+	var firstTokenMs *int
+	var clientDisconnect bool
+
+	if stream {
+		c.Header("Content-Type", "text/event-stream")
+		c.Header("Cache-Control", "no-cache")
+		c.Header("Connection", "keep-alive")
+		c.Header("X-Accel-Buffering", "no")
+		c.Status(http.StatusOK)
+
+		streamRes := s.streamUpstreamGeneric(c, resp, startTime, "antigravity responses upstream", ": ping\n\n", func(line string, u *ClaudeUsage) {
+			if strings.HasPrefix(line, "data: ") {
+				data := strings.TrimPrefix(line, "data: ")
+				if strings.TrimSpace(data) != "[DONE]" {
+					upstreamResponseModelObserverFromContext(c).ObserveOpenAI([]byte(data), "")
+					s.extractResponsesSSEUsage(line, u)
+				}
+			}
+		})
+		usage = streamRes.usage
+		firstTokenMs = streamRes.firstTokenMs
+		clientDisconnect = streamRes.clientDisconnect
+	} else {
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read upstream response: %w", err)
+		}
+		upstreamResponseModelObserverFromContext(c).ObserveOpenAI(respBody, "")
+		usage = s.extractResponsesUsage(respBody)
+
+		c.Header("Content-Type", resp.Header.Get("Content-Type"))
+		c.Status(http.StatusOK)
+		_, _ = c.Writer.Write(respBody)
+	}
+
+	duration := time.Since(startTime)
+	logger.LegacyPrintf("service.antigravity_gateway", "%s responses status=success duration_ms=%d", prefix, duration.Milliseconds())
+
+	finalUsage := ClaudeUsage{}
+	if usage != nil {
+		finalUsage = *usage
+	}
+
+	return &ForwardResult{
+		Model:                         model,
+		UpstreamResponseModel:         observedUpstreamResponseModel(c),
+		UpstreamResponseModelConflict: observedUpstreamResponseModelConflict(c),
+		Stream:                        stream,
+		Duration:                      duration,
+		FirstTokenMs:                  firstTokenMs,
+		ClientDisconnect:              clientDisconnect,
+		UpstreamHeaders:               resp.Header,
+		Usage:                         finalUsage,
+	}, nil
+}
+
+// ForwardUpstreamGemini forwards Gemini native requests to the upstream base_url + /v1beta/models/...
+func (s *AntigravityGatewayService) ForwardUpstreamGemini(ctx context.Context, c *gin.Context, account *Account, modelName string, action string, stream bool, body []byte) (*ForwardResult, error) {
+	beginUpstreamResponseModelObservation(c)
+	startTime := time.Now()
+	sessionID := getSessionID(c)
+	prefix := logPrefix(sessionID, account.Name)
+
+	baseURL := strings.TrimSpace(account.GetCredential("base_url"))
+	apiKey := strings.TrimSpace(account.GetCredential("api_key"))
+	if baseURL == "" || apiKey == "" {
+		return nil, fmt.Errorf("upstream account missing base_url or api_key")
+	}
+	baseURL = strings.TrimSuffix(baseURL, "/")
+
+	upstreamURL := fmt.Sprintf("%s/v1beta/models/%s:%s", baseURL, modelName, action)
+	if stream {
+		upstreamURL += "?alt=sse"
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, upstreamURL, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("create upstream request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("x-goog-api-key", apiKey)
+
+	proxyURL := ""
+	if account.ProxyID != nil && account.Proxy != nil {
+		proxyURL = account.Proxy.URL()
+	}
+
+	resp, err := s.httpUpstream.Do(req, proxyURL, account.ID, account.Concurrency)
+	if err != nil {
+		logger.LegacyPrintf("service.antigravity_gateway", "%s gemini upstream request failed: %v", prefix, err)
+		return nil, fmt.Errorf("upstream request failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode >= 400 {
+		respBody := s.readUpstreamErrorBody(resp)
+		if resp.StatusCode == http.StatusTooManyRequests {
+			s.handleUpstreamError(ctx, prefix, account, resp.StatusCode, resp.Header, respBody, modelName, 0, "", false)
+		}
+		c.Header("Content-Type", resp.Header.Get("Content-Type"))
+		c.Status(resp.StatusCode)
+		_, _ = c.Writer.Write(respBody)
+		return &ForwardResult{
+			Model: modelName,
+		}, nil
+	}
+
+	var usage *ClaudeUsage
+	var firstTokenMs *int
+	var clientDisconnect bool
+
+	if stream {
+		c.Header("Content-Type", "text/event-stream")
+		c.Header("Cache-Control", "no-cache")
+		c.Header("Connection", "keep-alive")
+		c.Header("X-Accel-Buffering", "no")
+		c.Status(http.StatusOK)
+
+		streamRes := s.streamUpstreamGeneric(c, resp, startTime, "antigravity gemini upstream", ": ping\n\n", func(line string, u *ClaudeUsage) {
+			s.extractGeminiSSEUsage(line, u)
+		})
+		usage = streamRes.usage
+		firstTokenMs = streamRes.firstTokenMs
+		clientDisconnect = streamRes.clientDisconnect
+	} else {
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read upstream response: %w", err)
+		}
+		usage = s.extractGeminiUsage(respBody)
+
+		c.Header("Content-Type", resp.Header.Get("Content-Type"))
+		c.Status(http.StatusOK)
+		_, _ = c.Writer.Write(respBody)
+	}
+
+	duration := time.Since(startTime)
+	logger.LegacyPrintf("service.antigravity_gateway", "%s gemini status=success duration_ms=%d", prefix, duration.Milliseconds())
+
+	finalUsage := ClaudeUsage{}
+	if usage != nil {
+		finalUsage = *usage
+	}
+
+	return &ForwardResult{
+		Model:                         modelName,
+		UpstreamResponseModel:         observedUpstreamResponseModel(c),
+		UpstreamResponseModelConflict: observedUpstreamResponseModelConflict(c),
+		Stream:                        stream,
+		Duration:                      duration,
+		FirstTokenMs:                  firstTokenMs,
+		ClientDisconnect:              clientDisconnect,
+		UpstreamHeaders:               resp.Header,
+		Usage:                         finalUsage,
+	}, nil
+}
+
+func (s *AntigravityGatewayService) extractOpenAIUsage(body []byte) *ClaudeUsage {
+	usage := &ClaudeUsage{}
+	res := gjson.GetBytes(body, "usage")
+	if !res.Exists() {
+		return usage
+	}
+	usage.InputTokens = int(res.Get("prompt_tokens").Int())
+	usage.OutputTokens = int(res.Get("completion_tokens").Int())
+	usage.CacheReadInputTokens = int(res.Get("prompt_tokens_details.cached_tokens").Int())
+	return usage
+}
+
+func (s *AntigravityGatewayService) extractOpenAISSEUsage(line string, usage *ClaudeUsage) {
+	if !strings.HasPrefix(line, "data: ") {
+		return
+	}
+	data := strings.TrimSpace(strings.TrimPrefix(line, "data: "))
+	if data == "[DONE]" || data == "" {
+		return
+	}
+	res := gjson.Get(data, "usage")
+	if !res.Exists() {
+		return
+	}
+	if in := res.Get("prompt_tokens").Int(); in > 0 {
+		usage.InputTokens = int(in)
+	}
+	if out := res.Get("completion_tokens").Int(); out > 0 {
+		usage.OutputTokens = int(out)
+	}
+	if cached := res.Get("prompt_tokens_details.cached_tokens").Int(); cached > 0 {
+		usage.CacheReadInputTokens = int(cached)
+	}
+}
+
+func (s *AntigravityGatewayService) extractResponsesUsage(body []byte) *ClaudeUsage {
+	usage := &ClaudeUsage{}
+	res := gjson.GetBytes(body, "usage")
+	if !res.Exists() {
+		res = gjson.GetBytes(body, "response.usage")
+	}
+	if !res.Exists() {
+		return usage
+	}
+	usage.InputTokens = int(res.Get("input_tokens").Int())
+	usage.OutputTokens = int(res.Get("output_tokens").Int())
+	usage.CacheReadInputTokens = int(res.Get("input_token_details.cached_tokens").Int())
+	return usage
+}
+
+func (s *AntigravityGatewayService) extractResponsesSSEUsage(line string, usage *ClaudeUsage) {
+	if !strings.HasPrefix(line, "data: ") {
+		return
+	}
+	data := strings.TrimSpace(strings.TrimPrefix(line, "data: "))
+	if data == "[DONE]" || data == "" {
+		return
+	}
+	res := gjson.Get(data, "usage")
+	if !res.Exists() {
+		res = gjson.Get(data, "response.usage")
+	}
+	if !res.Exists() {
+		return
+	}
+	if in := res.Get("input_tokens").Int(); in > 0 {
+		usage.InputTokens = int(in)
+	}
+	if out := res.Get("output_tokens").Int(); out > 0 {
+		usage.OutputTokens = int(out)
+	}
+	if cached := res.Get("input_token_details.cached_tokens").Int(); cached > 0 {
+		usage.CacheReadInputTokens = int(cached)
+	}
+}
+
+func (s *AntigravityGatewayService) extractGeminiUsage(body []byte) *ClaudeUsage {
+	usage := &ClaudeUsage{}
+	res := gjson.GetBytes(body, "usageMetadata")
+	if !res.Exists() {
+		return usage
+	}
+	usage.InputTokens = int(res.Get("promptTokenCount").Int())
+	usage.OutputTokens = int(res.Get("candidatesTokenCount").Int())
+	usage.CacheReadInputTokens = int(res.Get("cachedContentTokenCount").Int())
+	return usage
+}
+
+func (s *AntigravityGatewayService) extractGeminiSSEUsage(line string, usage *ClaudeUsage) {
+	if !strings.HasPrefix(line, "data: ") {
+		return
+	}
+	data := strings.TrimSpace(strings.TrimPrefix(line, "data: "))
+	if data == "" {
+		return
+	}
+	res := gjson.Get(data, "usageMetadata")
+	if !res.Exists() {
+		return
+	}
+	if in := res.Get("promptTokenCount").Int(); in > 0 {
+		usage.InputTokens = int(in)
+	}
+	if out := res.Get("candidatesTokenCount").Int(); out > 0 {
+		usage.OutputTokens = int(out)
+	}
+	if cached := res.Get("cachedContentTokenCount").Int(); cached > 0 {
+		usage.CacheReadInputTokens = int(cached)
+	}
 }
