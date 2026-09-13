@@ -127,6 +127,35 @@ export default {
     lastUsedAt: 'Last Used',
     lastUsedIP: 'Last Used IP',
     useKey: 'Use Key',
+    postmanTest: 'Postman Test',
+    postmanModal: {
+      title: 'Postman / cURL API Testing',
+      subtitle: 'Includes complete cURL commands for 4 major protocols, ready to import and test in Postman.',
+      selectModel: 'Test Model',
+      customModelOption: 'Custom Model',
+      customModelPlaceholder: 'Type model name, e.g. gemini-3-flash',
+      copyCurl: 'Copy cURL (Ready for Postman)',
+      copyBody: 'Copy JSON Body',
+      copyEndpoint: 'Copy Endpoint',
+      copied: 'Copied',
+      protocolTabs: {
+        openaiChat: 'OpenAI Chat',
+        claudeMessages: 'Claude Messages',
+        geminiNative: 'Gemini Native',
+        openaiResponses: 'OpenAI Responses'
+      },
+      notes: {
+        chat: 'Compatible with OpenAI SDK, ChatGPT, NextChat, OpenWebUI, Cursor, etc.',
+        messages: 'Compatible with Claude SDK, Claude Code, Chatbox, etc.',
+        gemini: 'Compatible with Google GenAI SDK, Gemini CLI, etc.',
+        responses: 'Compatible with Codex CLI and OpenAI Responses clients.'
+      },
+      postmanTipTitle: 'How to import into Postman directly?',
+      postmanStep1: 'Click the "Copy cURL" button above;',
+      postmanStep2: 'Open Postman and click the "Import" button in the top-left;',
+      postmanStep3: 'Press Ctrl+V (or Cmd+V on Mac) to paste the command;',
+      postmanStep4: 'Postman parses the URL, Headers, and Body automatically. Click "Send" to test!'
+    },
     useKeyModal: {
       title: 'Use API Key',
       description:

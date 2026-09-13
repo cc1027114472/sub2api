@@ -388,6 +388,15 @@
                 <Icon name="upload" size="sm" />
                 <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
               </button>
+              <!-- Postman / cURL Test Button -->
+              <button
+                @click="openPostmanModal(row)"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400"
+                :title="t('keys.postmanTest')"
+              >
+                <Icon name="beaker" size="sm" />
+                <span class="text-xs">{{ t('keys.postmanTest') }}</span>
+              </button>
               <!-- Toggle Status Button -->
               <button
                 @click="toggleKeyStatus(row)"
@@ -998,6 +1007,19 @@
       @close="closeUseKeyModal"
     />
 
+    <!-- Postman / cURL Test Modal -->
+    <PostmanTestModal
+      :show="showPostmanModal"
+      :api-key="selectedKey?.key || ''"
+      :key-name="selectedKey?.name || ''"
+      :base-url="publicSettings?.api_base_url || ''"
+      :platform="selectedGroupForModal?.platform || null"
+      :group-id="selectedKey?.group_id || null"
+      :group-name="selectedGroupForModal?.name || ''"
+      :allowed-models="selectedGroupModels"
+      @close="closePostmanModal"
+    />
+
     <!-- CCS Client Selection Dialog for Antigravity -->
     <BaseDialog
       :show="showCcsClientSelect"
@@ -1137,6 +1159,7 @@ import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 	import SearchInput from '@/components/common/SearchInput.vue'
 	import Icon from '@/components/icons/Icon.vue'
 	import UseKeyModal from '@/components/keys/UseKeyModal.vue'
+	import PostmanTestModal from '@/components/keys/PostmanTestModal.vue'
 	import EndpointPopover from '@/components/keys/EndpointPopover.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
@@ -1300,6 +1323,7 @@ const showDeleteDialog = ref(false)
 const showResetQuotaDialog = ref(false)
 const showResetRateLimitDialog = ref(false)
 const showUseKeyModal = ref(false)
+const showPostmanModal = ref(false)
 const showCcsClientSelect = ref(false)
 const showColumnDropdown = ref(false)
 const pendingCcsRow = ref<ApiKey | null>(null)
@@ -1538,6 +1562,26 @@ const closeUseKeyModal = () => {
   showUseKeyModal.value = false
   selectedKey.value = null
 }
+
+const openPostmanModal = (key: ApiKey) => {
+  selectedKey.value = key
+  showPostmanModal.value = true
+}
+
+const closePostmanModal = () => {
+  showPostmanModal.value = false
+  selectedKey.value = null
+}
+
+const selectedGroupForModal = computed(() => {
+  if (!selectedKey.value?.group_id) return selectedKey.value?.group
+  return groups.value.find((g) => g.id === selectedKey.value?.group_id) || selectedKey.value?.group
+})
+
+const selectedGroupModels = computed(() => {
+  const group = selectedGroupForModal.value as (Group & { model_allowlist?: { enabled: boolean; models: string[] } }) | undefined
+  return group?.model_allowlist?.models || []
+})
 
 const handlePageChange = (page: number) => {
   pagination.value.page = page

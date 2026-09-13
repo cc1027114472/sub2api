@@ -127,6 +127,35 @@ export default {
     lastUsedAt: '上次使用时间',
     lastUsedIP: '最近使用 IP',
     useKey: '使用密钥',
+    postmanTest: 'Postman 测试',
+    postmanModal: {
+      title: 'Postman / cURL 接口测试',
+      subtitle: '包含 4 种主流 API 协议的完整 cURL，可一键复制并直接导入 Postman 快速验证。',
+      selectModel: '测试模型',
+      customModelOption: '自定义模型',
+      customModelPlaceholder: '输入模型名称，如 gemini-3-flash',
+      copyCurl: '复制 cURL (支持 Postman 导入)',
+      copyBody: '复制 JSON 请求体',
+      copyEndpoint: '复制 Endpoint',
+      copied: '已复制',
+      protocolTabs: {
+        openaiChat: 'OpenAI Chat 协议',
+        claudeMessages: 'Anthropic Claude 协议',
+        geminiNative: 'Gemini 原生协议',
+        openaiResponses: 'OpenAI Responses 协议'
+      },
+      notes: {
+        chat: '适用于 OpenAI SDK、ChatGPT、NextChat、OpenWebUI、Cursor 等客户端。',
+        messages: '适用于 Claude SDK、Claude Code、Chatbox 等客户端。',
+        gemini: '适用于 Google GenAI SDK、Gemini CLI 等客户端。',
+        responses: '适用于 Codex CLI、Responses 协议客户端。'
+      },
+      postmanTipTitle: '如何在 Postman 中直接导入运行？',
+      postmanStep1: '点击上方「复制 cURL」按钮；',
+      postmanStep2: '打开 Postman，点击左上角「Import」(导入) 按钮；',
+      postmanStep3: '直接按快捷键 Ctrl+V (Mac 为 Cmd+V) 粘贴命令；',
+      postmanStep4: 'Postman 将自动识别 URL、请求头与请求体，点击「Send」发送即可立即测试！'
+    },
     useKeyModal: {
       title: '使用 API 密钥',
       description: '将以下环境变量添加到您的终端配置文件或直接在终端中运行。',
