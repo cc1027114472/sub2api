@@ -204,5 +204,101 @@ export async function syncPricingModels(platform: string): Promise<SyncPricingMo
   return data
 }
 
-const channelsAPI = { list, getById, create, update, remove, getModelDefaultPricing, syncPricingModels }
+// ==================== Quick Sync Types & APIs ====================
+
+export interface QuickSyncProbeParams {
+  base_url: string
+  api_key: string
+  platform?: string
+}
+
+export interface QuickSyncProbeModel {
+  id: string
+  display_name?: string
+  base_price_in?: number | null
+  base_price_out?: number | null
+  billing_mode: 'token' | 'per_request'
+  target_group_id?: number
+  price_in?: number | null
+  price_out?: number | null
+  per_request_price?: number | null
+}
+
+export interface QuickSyncProbeResult {
+  models: QuickSyncProbeModel[]
+  total: number
+  warnings?: string[]
+}
+
+export interface QuickSyncNewGroupParams {
+  create: boolean
+  name: string
+  rate_multiplier: number
+}
+
+export interface QuickSyncBillingStrategy {
+  mode: 'ratio' | 'per_request' | 'fixed'
+  ratio?: number
+  per_request_price?: number | null
+}
+
+export interface QuickSyncCommitModelItem {
+  model: string
+  target_group_id: number
+  billing_mode: 'token' | 'per_request'
+  input_price?: number | null
+  output_price?: number | null
+  per_request_price?: number | null
+}
+
+export interface QuickSyncCommitParams {
+  name: string
+  base_url: string
+  api_key: string
+  platform: string
+  default_group_id?: number | null
+  new_group?: QuickSyncNewGroupParams | null
+  billing_strategy?: QuickSyncBillingStrategy | null
+  models: QuickSyncCommitModelItem[]
+  enable_monitor?: boolean
+  monitor_model?: string
+  monitor_interval?: number
+}
+
+export interface QuickSyncCommitResult {
+  channel_id: number
+  account_id: number
+  group_ids?: number[]
+  model_count?: number
+  monitor_id?: number | null
+}
+
+/**
+ * Probe upstream models with URL and Key for Quick Sync
+ */
+export async function quickSyncProbe(params: QuickSyncProbeParams): Promise<QuickSyncProbeResult> {
+  const { data } = await apiClient.post<QuickSyncProbeResult>('/admin/channels/quick-sync/probe', params)
+  return data
+}
+
+/**
+ * Commit quick sync channel onboarding
+ */
+export async function quickSyncCommit(params: QuickSyncCommitParams): Promise<QuickSyncCommitResult> {
+  const { data } = await apiClient.post<QuickSyncCommitResult>('/admin/channels/quick-sync/commit', params)
+  return data
+}
+
+const channelsAPI = {
+  list,
+  getById,
+  create,
+  update,
+  remove,
+  getModelDefaultPricing,
+  syncPricingModels,
+  quickSyncProbe,
+  quickSyncCommit,
+}
 export default channelsAPI
+

@@ -948,6 +948,7 @@ var ProviderSet = wire.NewSet(
 	ProvideChannelMonitorV2Aggregator,
 	NewChannelMonitorRequestTemplateService,
 	ProvideUserPlatformQuotaUsageFlusher,
+	ProvideChannelQuickSyncService,
 )
 
 // ProvideUserPlatformQuotaUsageFlusher 创建并启动 UserPlatformQuotaUsageFlusher。
@@ -1121,4 +1122,34 @@ func ProvideChannelMonitorV2Aggregator(repo ChannelMonitorV2Repository, db *sql.
 	}
 	aggregator.Start()
 	return aggregator
+}
+
+// ProvideChannelQuickSyncService creates a ChannelQuickSyncService for probing and onboarding upstream nodes.
+func ProvideChannelQuickSyncService(
+	cfg *config.Config,
+	pricingService *PricingService,
+	billingService *BillingService,
+	accountTestService *AccountTestService,
+	accountRepo AccountRepository,
+	groupRepo GroupRepository,
+	channelRepo ChannelRepository,
+	entClient *dbent.Client,
+	channelCacheInvalidator ChannelCacheInvalidator,
+	channelService *ChannelService,
+	channelMonitorService *ChannelMonitorService,
+) *ChannelQuickSyncService {
+	svc := NewChannelQuickSyncService(
+		cfg,
+		pricingService,
+		billingService,
+		accountTestService,
+		accountRepo,
+		groupRepo,
+		channelRepo,
+		entClient,
+		channelCacheInvalidator,
+	)
+	svc.SetChannelService(channelService)
+	svc.SetChannelMonitorService(channelMonitorService)
+	return svc
 }

@@ -127,3 +127,14 @@ export type {
   PluginUISession,
   PluginTestResult
 } from './plugins'
+export type {
+  QuickSyncProbeParams,
+  QuickSyncProbeModel,
+  QuickSyncProbeResult,
+  QuickSyncNewGroupParams,
+  QuickSyncBillingStrategy,
+  QuickSyncCommitModelItem,
+  QuickSyncCommitParams,
+  QuickSyncCommitResult,
+} from './channels'
+
