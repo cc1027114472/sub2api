@@ -286,7 +286,30 @@ export default {
         syncingModels: '同步中...',
         syncModelsSuccess: '已同步 {count} 个新模型',
         syncModelsAlreadyUpToDate: '模型列表已是最新',
-        syncModelsError: '同步模型失败'
+        syncModelsError: '同步模型失败',
+        probeModels: '从上游探测选模型'
+      },
+
+      probeModal: {
+        title: '从上游探测并选择模型',
+        connectionTitle: '上游节点连接配置',
+        probedSuccess: '探测成功',
+        autoSaveHint: '连接信息将自动安全保存在本地浏览器中',
+        startProbe: '连接并探测模型',
+        modelsListTitle: '探测到的模型列表',
+        selectedCount: '已选 {count} 个',
+        searchPlaceholder: '搜索模型名称...',
+        selectAllNew: '全选未添加',
+        clearAll: '全不选',
+        alreadyInChannel: '渠道中已有',
+        canAdd: '未添加',
+        noMatchingModels: '没有找到匹配的模型',
+        targetEntryLabel: '导入目标:',
+        targetNewEntry: '创建为新的定价配置卡片',
+        targetExistingEntry: '追加到现有第 {index} 组配置',
+        summaryTotal: '共 {total} 个模型，{available} 个未添加',
+        confirmImport: '导入已选 ({count}) 个模型',
+        importSuccess: '成功导入 {count} 个模型！请核对价格后保存。'
       }
     },
 

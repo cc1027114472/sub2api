@@ -853,6 +853,10 @@ watch(
   (val) => {
     if (val) {
       loadGroups()
+      const savedBaseUrl = localStorage.getItem('sub2api_upstream_base_url')
+      const savedApiKey = localStorage.getItem('sub2api_upstream_api_key')
+      if (savedBaseUrl && !form.base_url) form.base_url = savedBaseUrl
+      if (savedApiKey && !form.api_key) form.api_key = savedApiKey
     } else {
       resetState()
     }
@@ -932,6 +936,9 @@ const handleProbe = async () => {
     if (models.value.length > 0) {
       form.monitorModel = pickBestMonitorModel(models.value)
     }
+
+    localStorage.setItem('sub2api_upstream_base_url', form.base_url.trim())
+    localStorage.setItem('sub2api_upstream_api_key', form.api_key.trim())
 
     // Auto set new group name if empty
     if (!form.newGroupName) {

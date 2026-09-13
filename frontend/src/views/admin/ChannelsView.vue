@@ -431,6 +431,14 @@
                 <div class="flex items-center gap-2">
                   <button
                     type="button"
+                    @click="openProbeModelsModal(sIdx)"
+                    class="text-xs text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1"
+                  >
+                    <Icon name="bolt" size="xs" />
+                    {{ t('admin.channels.form.probeModels', '从上游探测选模型') }}
+                  </button>
+                  <button
+                    type="button"
                     @click="syncLatestModels(sIdx)"
                     :disabled="syncingPlatform === section.platform"
                     class="text-xs text-gray-500 hover:text-primary-600 disabled:opacity-50"
@@ -636,6 +644,15 @@
       v-model:visible="showQuickSyncModal"
       @success="handleQuickSyncSuccess"
     />
+
+    <!-- Upstream Probe & Select Models Modal -->
+    <ChannelProbeModelsModal
+      v-model:visible="showProbeModelsModal"
+      :platform="probePlatform"
+      :existing-models="currentSectionModels"
+      :pricing-entries-count="currentSectionPricingCount"
+      @import-models="handleImportProbedModels"
+    />
   </AppLayout>
 </template>
 
@@ -664,6 +681,7 @@ import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import PricingEntryCard from '@/components/admin/channel/PricingEntryCard.vue'
 import ChannelQuickSyncModal from './components/ChannelQuickSyncModal.vue'
+import ChannelProbeModelsModal from './components/ChannelProbeModelsModal.vue'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { useKeyedDebouncedSearch } from '@/composables/useKeyedDebouncedSearch'
 
@@ -936,6 +954,71 @@ async function syncLatestModels(sectionIdx: number) {
   } finally {
     syncingPlatform.value = null
   }
+}
+
+// ── Upstream Model Probe & Selection Modal ──
+const showProbeModelsModal = ref(false)
+const probeSectionIndex = ref<number>(0)
+
+const probePlatform = computed(() => {
+  return form.platforms[probeSectionIndex.value]?.platform || 'antigravity'
+})
+
+const currentSectionModels = computed(() => {
+  const section = form.platforms[probeSectionIndex.value]
+  if (!section) return []
+  const list: string[] = []
+  for (const p of section.model_pricing) {
+    list.push(...p.models)
+  }
+  return list
+})
+
+const currentSectionPricingCount = computed(() => {
+  return form.platforms[probeSectionIndex.value]?.model_pricing?.length || 0
+})
+
+function openProbeModelsModal(sectionIdx: number) {
+  probeSectionIndex.value = sectionIdx
+  showProbeModelsModal.value = true
+}
+
+function handleImportProbedModels(payload: { models: string[]; targetEntryIndex: number | 'new' }) {
+  const section = form.platforms[probeSectionIndex.value]
+  if (!section) return
+
+  if (payload.targetEntryIndex === 'new') {
+    section.model_pricing.push({
+      models: [...payload.models],
+      billing_mode: 'token',
+      input_price: null,
+      output_price: null,
+      cache_write_price: null,
+      cache_write_1h_price: null,
+      cache_read_price: null,
+      fast_multiplier: null,
+      flex_multiplier: null,
+      max_reasoning_effort_multiplier: null,
+      image_input_price: null,
+      image_output_price: null,
+      per_request_price: null,
+      intervals: [],
+      time_pricing: createDefaultTimePricingForm()
+    })
+  } else {
+    const entry = section.model_pricing[payload.targetEntryIndex]
+    if (entry) {
+      const set = new Set(entry.models)
+      for (const m of payload.models) {
+        set.add(m)
+      }
+      entry.models = Array.from(set)
+    }
+  }
+
+  appStore.showSuccess(
+    t('admin.channels.probeModal.importSuccess', { count: payload.models.length }, `成功导入 ${payload.models.length} 个模型！请核对价格后保存。`)
+  )
 }
 
 function updatePricingEntry(sectionIdx: number, idx: number, updated: PricingFormEntry) {

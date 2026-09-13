@@ -286,8 +286,31 @@ export default {
          syncingModels: 'Syncing...',
          syncModelsSuccess: 'Synced {count} new model(s)',
          syncModelsAlreadyUpToDate: 'Models already up to date',
-         syncModelsError: 'Failed to sync models'
-       }
+         syncModelsError: 'Failed to sync models',
+         probeModels: 'Probe Upstream Models'
+       },
+
+      probeModal: {
+        title: 'Probe & Select Models from Upstream',
+        connectionTitle: 'Upstream Node Connection',
+        probedSuccess: 'Probed Successfully',
+        autoSaveHint: 'Connection settings are automatically and securely saved in local browser storage',
+        startProbe: 'Connect & Probe Models',
+        modelsListTitle: 'Probed Models List',
+        selectedCount: '{count} selected',
+        searchPlaceholder: 'Search model name...',
+        selectAllNew: 'Select All New',
+        clearAll: 'Clear All',
+        alreadyInChannel: 'Already in Channel',
+        canAdd: 'Available',
+        noMatchingModels: 'No matching models found',
+        targetEntryLabel: 'Import Target:',
+        targetNewEntry: 'Create as a new pricing entry',
+        targetExistingEntry: 'Append to existing entry #{index}',
+        summaryTotal: '{total} total models, {available} available to add',
+        confirmImport: 'Import Selected ({count}) Models',
+        importSuccess: 'Successfully imported {count} models! Please verify pricing before saving.'
+      }
      },
 
     riskControl: {
