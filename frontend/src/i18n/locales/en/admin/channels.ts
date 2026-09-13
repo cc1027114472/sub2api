@@ -114,6 +114,7 @@ export default {
         monitorTitle: 'Channel Health Monitor',
         monitorDesc: 'Automatically create health probe to periodically check latency and availability',
         monitorPrimaryModel: 'Primary Probe Model',
+        monitorHint: 'Recommend selecting a lightweight model with sufficient quota (such as flash / mini) to avoid probe failures caused by upstream quota exhaustion.',
         monitorInterval: 'Probe Interval (s)',
         monitorStatus: 'Health Monitor',
         probeFailed: 'Probe failed. Please check Base URL and API Key.',

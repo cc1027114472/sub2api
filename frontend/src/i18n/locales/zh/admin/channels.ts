@@ -114,6 +114,7 @@ export default {
         monitorTitle: '渠道健康监控',
         monitorDesc: '自动创建健康巡检探针，定时拨测节点延迟与可用率',
         monitorPrimaryModel: '主探测模型',
+        monitorHint: '建议选择节点中账号配额充足的轻量模型（如 flash / mini），避免因上游账号额度耗尽导致拨测失败。',
         monitorInterval: '巡检周期 (秒)',
         monitorStatus: '健康监控',
         probeFailed: '探测失败，请检查 Base URL 与 API Key 是否正确',
