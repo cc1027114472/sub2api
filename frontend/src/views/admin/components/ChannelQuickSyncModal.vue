@@ -432,8 +432,8 @@
                     class="input py-1 text-xs"
                     :data-test="`model-mode-${item.id}`"
                   >
-                    <option value="token">{{ t('admin.channels.pricing.billingModeToken', '按 Token') }}</option>
-                    <option value="per_request">{{ t('admin.channels.pricing.billingModePerRequest', '按次') }}</option>
+                    <option value="token">{{ t('admin.availableChannels.pricing.billingModeToken', '按 Token') }}</option>
+                    <option value="per_request">{{ t('admin.availableChannels.pricing.billingModePerRequest', '按次') }}</option>
                   </select>
                 </td>
                 <td class="px-3 py-2">
