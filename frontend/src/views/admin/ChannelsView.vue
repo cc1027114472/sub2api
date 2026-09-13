@@ -39,6 +39,13 @@
             >
               <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
             </button>
+            <button
+              @click="showQuickSyncModal = true"
+              class="btn btn-secondary"
+            >
+              <Icon name="bolt" size="md" class="mr-2 text-amber-500" />
+              {{ t('admin.channels.quickSync.button', '一键同步节点') }}
+            </button>
             <button @click="openCreateDialog" class="btn btn-primary">
               <Icon name="plus" size="md" class="mr-2" />
               {{ t('admin.channels.createChannel', 'Create Channel') }}
@@ -623,6 +630,12 @@
       @confirm="confirmDelete"
       @cancel="showDeleteDialog = false"
     />
+
+    <!-- Quick Sync Modal -->
+    <ChannelQuickSyncModal
+      v-model:visible="showQuickSyncModal"
+      @success="handleQuickSyncSuccess"
+    />
   </AppLayout>
 </template>
 
@@ -650,11 +663,18 @@ import Icon from '@/components/icons/Icon.vue'
 import PlatformIcon from '@/components/common/PlatformIcon.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import PricingEntryCard from '@/components/admin/channel/PricingEntryCard.vue'
+import ChannelQuickSyncModal from './components/ChannelQuickSyncModal.vue'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { useKeyedDebouncedSearch } from '@/composables/useKeyedDebouncedSearch'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+
+const showQuickSyncModal = ref(false)
+
+function handleQuickSyncSuccess() {
+  loadChannels()
+}
 
 // Web Search global enabled state (loaded once on mount)
 const webSearchGlobalEnabled = ref(false)

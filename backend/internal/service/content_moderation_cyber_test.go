@@ -211,7 +211,7 @@ func TestRecordCyberPolicyEvent_RespectsContentModerationScope(t *testing.T) {
 					SettingKeyRiskControlEnabled:      "true",
 					SettingKeyContentModerationConfig: tt.config,
 				}},
-				repo, nil, nil, userRepo, nil, nil, nil,
+				repo, nil, nil, userRepo, nil, nil, nil, nil,
 			)
 
 			svc.RecordCyberPolicyEvent(context.Background(), CyberPolicyRecordInput{
@@ -242,7 +242,7 @@ func TestRecordCyberPolicyEvent_InitialRuntimeSnapshotLoadFailureSkipsEvent(t *t
 		SettingKeyRiskControlEnabled:      "true",
 		SettingKeyContentModerationConfig: `{invalid`,
 	}}
-	svc := NewContentModerationService(settingRepo, repo, nil, nil, nil, nil, nil, nil)
+	svc := NewContentModerationService(settingRepo, repo, nil, nil, nil, nil, nil, nil, nil)
 
 	svc.RecordCyberPolicyEvent(context.Background(), CyberPolicyRecordInput{
 		UserID: 1,
@@ -262,7 +262,7 @@ func TestRecordCyberPolicyEvent_RuntimeSnapshotRefreshFailureKeepsStaleScope(t *
 		SettingKeyRiskControlEnabled:      "true",
 		SettingKeyContentModerationConfig: `{"all_groups":true,"model_filter":{"type":"include","models":["gpt-5"]}}`,
 	}}
-	svc := NewContentModerationService(settingRepo, repo, nil, nil, nil, nil, nil, nil)
+	svc := NewContentModerationService(settingRepo, repo, nil, nil, nil, nil, nil, nil, nil)
 	svc.runtimeCacheTTL = time.Minute
 
 	_, err := svc.loadRuntimeSnapshot(context.Background())

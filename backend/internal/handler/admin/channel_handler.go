@@ -15,14 +15,20 @@ import (
 
 // ChannelHandler handles admin channel management
 type ChannelHandler struct {
-	channelService *service.ChannelService
-	billingService *service.BillingService
-	pricingService *service.PricingService
+	channelService   *service.ChannelService
+	billingService   *service.BillingService
+	pricingService   *service.PricingService
+	quickSyncService *service.ChannelQuickSyncService
 }
 
 // NewChannelHandler creates a new admin channel handler
 func NewChannelHandler(channelService *service.ChannelService, billingService *service.BillingService, pricingService *service.PricingService) *ChannelHandler {
 	return &ChannelHandler{channelService: channelService, billingService: billingService, pricingService: pricingService}
+}
+
+// SetQuickSyncService attaches the quick sync service.
+func (h *ChannelHandler) SetQuickSyncService(quickSyncService *service.ChannelQuickSyncService) {
+	h.quickSyncService = quickSyncService
 }
 
 // --- Request / Response types ---
