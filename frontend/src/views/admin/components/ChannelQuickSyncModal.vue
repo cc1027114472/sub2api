@@ -302,10 +302,13 @@
               class="input w-full"
               data-test="monitor-model-select"
             >
-              <option v-for="m in models" :key="m.id" :value="m.id">
+              <option v-for="m in (selectedModels.length > 0 ? selectedModels : models)" :key="m.id" :value="m.id">
                 {{ m.id }}
               </option>
             </select>
+            <p class="input-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.channels.quickSync.monitorHint', '建议选择节点中账号配额充足的轻量模型（如 flash / mini），避免因上游账号额度耗尽导致拨测失败。') }}
+            </p>
           </div>
           <div>
             <label class="input-label">{{ t('admin.channels.quickSync.monitorInterval', '巡检周期 (秒)') }}</label>
@@ -805,6 +808,28 @@ const groupSummaries = computed(() => {
   }))
 })
 
+const pickBestMonitorModel = (candidates: Array<{ id: string }>): string => {
+  if (!candidates || candidates.length === 0) return ''
+  // 优先挑选轻量稳定高配额的具体模型（flash / mini / haiku 等），避免纯别名（如 gemini、claude）或已耗尽配额的模型
+  const preferred = candidates.find(m => {
+    const id = m.id.toLowerCase()
+    return (id.includes('flash') || id.includes('mini') || id.includes('haiku') || id.includes('instant')) &&
+      !id.endsWith('*') && !id.includes('thinking')
+  })
+  if (preferred) return preferred.id
+  const nonWildcard = candidates.find(m => !m.id.includes('*'))
+  if (nonWildcard) return nonWildcard.id
+  return candidates[0].id
+}
+
+watch(selectedModels, (newSelected) => {
+  if (newSelected.length > 0) {
+    if (!form.monitorModel || !newSelected.some(m => m.id === form.monitorModel)) {
+      form.monitorModel = pickBestMonitorModel(newSelected)
+    }
+  }
+})
+
 // Load groups on mount or when modal opens
 const loadGroups = async () => {
   try {
@@ -904,8 +929,8 @@ const handleProbe = async () => {
       appStore?.showWarning?.(result.warnings.join('; '))
     }
 
-    if (models.value.length > 0 && !form.monitorModel) {
-      form.monitorModel = models.value[0].id
+    if (models.value.length > 0) {
+      form.monitorModel = pickBestMonitorModel(models.value)
     }
 
     // Auto set new group name if empty
