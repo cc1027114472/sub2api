@@ -316,9 +316,26 @@
             <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
               {{ t('admin.channels.quickSync.modelListTitle', '探测模型列表') }} ({{ models.length }})
             </h4>
-            <span class="text-xs text-gray-500 dark:text-gray-400">
-              已选 {{ selectedModelCount }} 个
+            <span class="text-xs font-medium text-primary-600 dark:text-primary-400">
+              已选 {{ selectedModelCount }} 个（仅导入勾选模型）
             </span>
+            <div class="flex items-center gap-1.5 text-xs text-gray-500">
+              <button
+                type="button"
+                class="hover:text-primary-600 dark:hover:text-primary-400"
+                @click="selectAllModels(true)"
+              >
+                全选
+              </button>
+              <span>/</span>
+              <button
+                type="button"
+                class="hover:text-primary-600 dark:hover:text-primary-400"
+                @click="selectAllModels(false)"
+              >
+                全不选
+              </button>
+            </div>
           </div>
 
           <!-- 批量操作工具栏 -->
@@ -521,8 +538,11 @@
               </dd>
             </div>
             <div class="flex justify-between">
-              <dt class="text-gray-500 dark:text-gray-400">{{ t('admin.channels.quickSync.totalModelsCount', '模型总数') }}:</dt>
-              <dd class="font-bold text-gray-900 dark:text-white">{{ models.length }}</dd>
+              <dt class="text-gray-500 dark:text-gray-400">{{ t('admin.channels.quickSync.totalModelsCount', '导入模型数量') }}:</dt>
+              <dd class="font-bold text-gray-900 dark:text-white">
+                {{ selectedModels.length }}
+                <span class="text-xs font-normal text-gray-400">/ 探测到 {{ models.length }} 个</span>
+              </dd>
             </div>
             <div class="flex justify-between">
               <dt class="text-gray-500 dark:text-gray-400">{{ t('admin.channels.quickSync.billingBreakdown', '计费模式分布') }}:</dt>
@@ -721,14 +741,19 @@ const isStep1Valid = computed(() => {
   return form.name.trim() !== '' && form.base_url.trim() !== '' && form.api_key.trim() !== ''
 })
 
-const isStep2Valid = computed(() => {
-  if (models.value.length === 0) return false
-  if (form.createNewGroup && form.newGroupName.trim() === '') return false
-  return true
+const selectedModels = computed(() => {
+  return models.value.filter(m => m.selected)
 })
 
 const selectedModelCount = computed(() => {
-  return models.value.filter(m => m.selected).length
+  return selectedModels.value.length
+})
+
+const isStep2Valid = computed(() => {
+  if (models.value.length === 0) return false
+  if (selectedModels.value.length === 0) return false
+  if (form.createNewGroup && form.newGroupName.trim() === '') return false
+  return true
 })
 
 const allSelected = computed(() => {
@@ -736,16 +761,16 @@ const allSelected = computed(() => {
 })
 
 const tokenModelCount = computed(() => {
-  return models.value.filter(m => m.billing_mode === 'token').length
+  return selectedModels.value.filter(m => m.billing_mode === 'token').length
 })
 
 const perReqModelCount = computed(() => {
-  return models.value.filter(m => m.billing_mode === 'per_request').length
+  return selectedModels.value.filter(m => m.billing_mode === 'per_request').length
 })
 
 const groupSummaries = computed(() => {
   const map: Record<string, string[]> = {}
-  for (const m of models.value) {
+  for (const m of selectedModels.value) {
     let groupName = '未知分组'
     if (m.target_group_id === 0) {
       groupName = form.createNewGroup
@@ -933,6 +958,10 @@ const applyBillingStrategy = () => {
 
 const toggleSelectAll = (e: Event) => {
   const checked = (e.target as HTMLInputElement).checked
+  selectAllModels(checked)
+}
+
+const selectAllModels = (checked: boolean) => {
   for (const m of models.value) {
     m.selected = checked
   }
@@ -971,6 +1000,11 @@ const applyBatchBillingMode = (mode: 'token' | 'per_request') => {
 const handleCommit = async () => {
   loading.value = true
   try {
+    let monitorModel = form.monitorModel
+    if (selectedModels.value.length > 0 && !selectedModels.value.some(m => m.id === monitorModel)) {
+      monitorModel = selectedModels.value[0].id
+    }
+
     const payload: QuickSyncCommitParams = {
       name: form.name.trim(),
       base_url: form.base_url.trim(),
@@ -989,7 +1023,7 @@ const handleCommit = async () => {
         ratio: billingStrategy.ratio,
         per_request_price: billingStrategy.per_request_price
       },
-      models: models.value.map(m => ({
+      models: selectedModels.value.map(m => ({
         model: m.id,
         target_group_id: m.target_group_id ?? 0,
         billing_mode: m.billing_mode,
@@ -998,7 +1032,7 @@ const handleCommit = async () => {
         per_request_price: m.billing_mode === 'per_request' ? m.per_request_price : undefined
       })),
       enable_monitor: form.enableMonitor,
-      monitor_model: form.enableMonitor ? (form.monitorModel || models.value[0]?.id) : undefined,
+      monitor_model: form.enableMonitor ? monitorModel : undefined,
       monitor_interval: form.enableMonitor ? (form.monitorInterval || 60) : undefined
     }
 

@@ -291,4 +291,48 @@ describe('ChannelQuickSyncModal.vue', () => {
     expect(wrapper.emitted('success')).toBeTruthy()
     expect(wrapper.emitted('update:visible')?.[0]).toEqual([false])
   })
+
+  it('only commits selected models and ignores unselected models', async () => {
+    quickSyncProbeMock.mockResolvedValue({
+      platform: 'antigravity',
+      models: [
+        { id: 'gemini-2.5-pro', billing_mode: 'token', price_in: 0.000001, price_out: 0.000002 },
+        { id: 'claude-3-7-sonnet', billing_mode: 'token', price_in: 0.000003, price_out: 0.000015 }
+      ]
+    })
+    quickSyncCommitMock.mockResolvedValue({
+      channel_id: 10,
+      account_id: 20,
+      group_id: 1,
+      model_count: 1
+    })
+
+    const wrapper = mountModal()
+    await flushPromises()
+
+    await wrapper.find('[data-test="probe-name-input"]').setValue('Antigravity-Node-2')
+    await wrapper.find('[data-test="probe-url-input"]').setValue('http://127.0.0.1:8080')
+    await wrapper.find('[data-test="probe-key-input"]').setValue('sk-test-secret-key')
+    await wrapper.find('[data-test="probe-submit-btn"]').trigger('click')
+    await flushPromises()
+
+    // Unselect claude-3-7-sonnet
+    const checkbox = wrapper.find('[data-test="model-select-claude-3-7-sonnet"]')
+    expect(checkbox.exists()).toBe(true)
+    await checkbox.setValue(false)
+    await flushPromises()
+
+    // Go to step 3 and commit
+    await wrapper.find('[data-test="next-step-btn"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-test="commit-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(quickSyncCommitMock).toHaveBeenCalledWith(expect.objectContaining({
+      models: [
+        expect.objectContaining({ model: 'gemini-2.5-pro' })
+      ]
+    }))
+  })
 })
