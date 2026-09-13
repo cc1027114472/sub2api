@@ -5,32 +5,51 @@
   >
     <!-- 分组头部:名称/平台/倍率徽章/专属/订阅徽章 + 描述 -->
     <header class="border-b border-gray-100 px-5 py-4 dark:border-dark-700/60">
-      <div class="flex flex-wrap items-center gap-2">
-        <GroupBadge
-          :name="group.name"
-          :platform="group.platform as GroupPlatform"
-          :subscription-type="(group.subscription_type || 'standard') as SubscriptionType"
-          :rate-multiplier="group.rate_multiplier"
-          :user-rate-multiplier="group.user_rate_multiplier ?? null"
-          :peak-rate-enabled="group.peak_rate_enabled"
-          :peak-start="group.peak_start"
-          :peak-end="group.peak_end"
-          :peak-rate-multiplier="group.peak_rate_multiplier"
-          always-show-rate
-        />
-        <span
-          v-if="group.is_exclusive"
-          class="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-600 dark:bg-purple-900/20 dark:text-purple-400"
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <GroupBadge
+            :name="group.name"
+            :platform="group.platform as GroupPlatform"
+            :subscription-type="(group.subscription_type || 'standard') as SubscriptionType"
+            :rate-multiplier="group.rate_multiplier"
+            :user-rate-multiplier="group.user_rate_multiplier ?? null"
+            :peak-rate-enabled="group.peak_rate_enabled"
+            :peak-start="group.peak_start"
+            :peak-end="group.peak_end"
+            :peak-rate-multiplier="group.peak_rate_multiplier"
+            always-show-rate
+          />
+          <span
+            v-if="group.is_exclusive"
+            class="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-600 dark:bg-purple-900/20 dark:text-purple-400"
+          >
+            <Icon name="shield" size="xs" class="h-3 w-3" />
+            {{ t('modelPlaza.badges.exclusive') }}
+          </span>
+          <span
+            v-if="group.subscription_type === 'subscription'"
+            class="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-600 dark:bg-violet-900/20 dark:text-violet-400"
+          >
+            {{ t('modelPlaza.badges.subscription') }}
+          </span>
+        </div>
+
+        <!-- 批量复制本组模型列表按钮 -->
+        <button
+          v-if="group.models.length > 0"
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 hover:text-gray-900 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700 dark:hover:text-white"
+          :title="t('modelPlaza.copyGroupModelsHint')"
+          @click="copyGroupModels"
         >
-          <Icon name="shield" size="xs" class="h-3 w-3" />
-          {{ t('modelPlaza.badges.exclusive') }}
-        </span>
-        <span
-          v-if="group.subscription_type === 'subscription'"
-          class="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-600 dark:bg-violet-900/20 dark:text-violet-400"
-        >
-          {{ t('modelPlaza.badges.subscription') }}
-        </span>
+          <Icon
+            :name="copiedGroup ? 'check' : 'copy'"
+            size="xs"
+            class="h-3.5 w-3.5 transition-colors"
+            :class="copiedGroup ? 'text-green-500 dark:text-green-400' : 'text-gray-400 dark:text-dark-400'"
+          />
+          <span>{{ copiedGroup ? t('modelPlaza.groupModelsCopied') : t('modelPlaza.copyGroupModels') }}</span>
+        </button>
       </div>
       <p v-if="group.description" class="mt-2 text-sm text-gray-500 dark:text-dark-400">
         {{ group.description }}
@@ -72,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
@@ -118,4 +137,34 @@ const longContextNote = computed(() => {
   )
   return hasOfficialLadder ? t('modelPlaza.detail.longContextDisabledNote') : ''
 })
+
+const copiedGroup = ref(false)
+let copyGroupTimer: ReturnType<typeof setTimeout> | null = null
+
+async function copyGroupModels() {
+  const modelNames = props.group.models.map((m) => m.name).join(',')
+  if (!modelNames) return
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(modelNames)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = modelNames
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+    copiedGroup.value = true
+    if (copyGroupTimer) clearTimeout(copyGroupTimer)
+    copyGroupTimer = setTimeout(() => {
+      copiedGroup.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy group model names:', err)
+  }
+}
 </script>

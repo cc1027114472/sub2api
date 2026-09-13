@@ -697,4 +697,20 @@ describe('PlazaModelPricingTable 分时计价', () => {
     expect(wrapper.findAll('tbody tr')).toHaveLength(1)
     expect(wrapper.find('[title*="modelPlaza.table.timePricingRowHint"]').exists()).toBe(false)
   })
+
+  it('renders copy button and copies model name to clipboard on click', async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock
+      }
+    })
+
+    const wrapper = mountTable([tokenModel({ name: 'claude-sonnet-4-6' })], 1)
+    const copyBtn = wrapper.find('button[aria-label="modelPlaza.copyModelName"]')
+    expect(copyBtn.exists()).toBe(true)
+
+    await copyBtn.trigger('click')
+    expect(writeTextMock).toHaveBeenCalledWith('claude-sonnet-4-6')
+  })
 })

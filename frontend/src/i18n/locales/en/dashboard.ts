@@ -645,6 +645,11 @@ export default {
     loadFailed: 'Failed to load model plaza',
     noSearchResult: 'No matching models',
     anonymousHint: 'Sign in to see your exclusive groups and personal rates',
+    copyModelName: 'Copy model name',
+    copied: 'Copied',
+    copyGroupModels: 'Copy model list',
+    copyGroupModelsHint: 'Copy all model names in this group (comma-separated)',
+    groupModelsCopied: 'Model list copied',
     filters: {
       platformLabel: 'Platform',
       groupLabel: 'Group',

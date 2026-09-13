@@ -650,6 +650,11 @@ export default {
     loadFailed: '加载模型广场失败',
     noSearchResult: '没有匹配的模型',
     anonymousHint: '登录后可查看你的专属分组与专属倍率',
+    copyModelName: '复制模型名称',
+    copied: '已复制',
+    copyGroupModels: '复制本组模型',
+    copyGroupModelsHint: '复制本组所有可用模型名称（逗号分隔），方便配置客户端',
+    groupModelsCopied: '已复制模型列表',
     filters: {
       platformLabel: '平台',
       groupLabel: '分组',

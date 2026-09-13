@@ -137,3 +137,28 @@ describe('PlazaGroupSection 高峰配置传递', () => {
     expect(wrapper.findComponent(PlazaModelPricingTable).props('peakWindow')).toBe('')
   })
 })
+
+describe('PlazaGroupSection 批量复制本组模型', () => {
+  it('点击复制按钮将组内所有模型名称以逗号分隔复制到剪贴板', async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock
+      }
+    })
+
+    const g = group({
+      models: [
+        { ...ladderModel(1), name: 'claude-sonnet-4-6' },
+        { ...ladderModel(1), name: 'gemini-3.8-flash-high' }
+      ]
+    })
+    const wrapper = mountSection(g)
+    const copyBtn = wrapper.find('button[title="modelPlaza.copyGroupModelsHint"]')
+    expect(copyBtn.exists()).toBe(true)
+    expect(copyBtn.text()).toContain('modelPlaza.copyGroupModels')
+
+    await copyBtn.trigger('click')
+    expect(writeTextMock).toHaveBeenCalledWith('claude-sonnet-4-6,gemini-3.8-flash-high')
+  })
+})

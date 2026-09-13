@@ -17,7 +17,7 @@
         >
           <th
             rowspan="2"
-            class="border-r border-gray-100 py-2.5 pl-5 pr-4 text-left align-middle dark:border-dark-700/60"
+            class="sticky-model-col border-r border-gray-100 py-2.5 pl-5 pr-4 text-left align-middle dark:border-dark-700/60"
           >
             {{ t('modelPlaza.table.model') }}
           </th>
@@ -62,10 +62,24 @@
           :key="key"
           class="border-b border-gray-100 transition-colors last:border-b-0 hover:bg-gray-50/70 dark:border-dark-800 dark:hover:bg-dark-800/50"
         >
-          <!-- 模型名 + 非 token 计费模式徽章;分时时段行额外标注时段 -->
-          <td class="border-r border-gray-100 py-2.5 pl-5 pr-4 align-middle dark:border-dark-700/60">
-            <div class="flex flex-wrap items-center gap-1.5">
-              <span class="font-medium text-gray-900 dark:text-white">{{ m.name }}</span>
+          <!-- 模型名 + 复制按钮 + 非 token 计费模式徽章;分时时段行额外标注时段 -->
+          <td class="sticky-model-col border-r border-gray-100 py-2.5 pl-5 pr-4 align-middle dark:border-dark-700/60">
+            <div class="flex flex-wrap items-center gap-1.5 group/model">
+              <span class="font-medium text-gray-900 dark:text-white select-all">{{ m.name }}</span>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-dark-400 dark:hover:bg-dark-700 dark:hover:text-dark-200 transition"
+                :title="copiedModel === m.name ? t('modelPlaza.copied') : t('modelPlaza.copyModelName')"
+                :aria-label="t('modelPlaza.copyModelName')"
+                @click="copyModel(m.name)"
+              >
+                <Icon
+                  :name="copiedModel === m.name ? 'check' : 'copy'"
+                  size="xs"
+                  class="h-3.5 w-3.5 transition-colors"
+                  :class="copiedModel === m.name ? 'text-green-500 dark:text-green-400' : ''"
+                />
+              </button>
               <!-- 时段徽章紧跟模型名,其余徽章排在后面,空间不足时先换行的是它们 -->
               <span
                 v-if="period"
@@ -304,8 +318,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Icon from '@/components/icons/Icon.vue'
 import { formatScaled, resolveIntervalPrices } from '@/utils/pricing'
 import { platformAccentColor, platformBadgeLightClass, platformLabel } from '@/utils/platformColors'
 import {
@@ -533,9 +548,60 @@ function formatTokenCount(n: number): string {
 function trimZero(n: number): string {
   return String(Math.round(n * 100) / 100)
 }
+
+const copiedModel = ref<string | null>(null)
+let copyTimer: ReturnType<typeof setTimeout> | null = null
+
+async function copyModel(name: string) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(name)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = name
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+    copiedModel.value = name
+    if (copyTimer) clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => {
+      copiedModel.value = null
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy model name:', err)
+  }
+}
 </script>
 
 <style scoped>
+/* 模型首列冻结，小屏横向滚动时常驻左侧 */
+.sticky-model-col {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: #ffffff;
+  box-shadow: 2px 0 6px -2px rgba(0, 0, 0, 0.06);
+}
+
+:global(.dark) .sticky-model-col,
+.dark .sticky-model-col {
+  background-color: #1e293b;
+  box-shadow: 2px 0 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+tbody tr:hover .sticky-model-col {
+  background-color: #f9fafb;
+}
+
+:global(.dark) tbody tr:hover .sticky-model-col,
+.dark tbody tr:hover .sticky-model-col {
+  background-color: #182234;
+}
+
 /* 实付分区配色统一从 --plaza-accent(平台主色)派生,新增平台无需扩展样式 */
 .plaza-pricing-table {
   --pz-title: color-mix(in srgb, var(--plaza-accent) 88%, black);
