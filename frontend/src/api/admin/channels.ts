@@ -233,6 +233,7 @@ export interface QuickSyncProbeResult {
 export interface QuickSyncNewGroupParams {
   create: boolean
   name: string
+  platform?: string
   rate_multiplier: number
 }
 

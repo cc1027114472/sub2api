@@ -307,13 +307,13 @@ describe('ChannelQuickSyncModal.vue', () => {
       model_count: 1
     })
 
-    const wrapper = mountModal()
+    const wrapper = createWrapper()
     await flushPromises()
 
-    await wrapper.find('[data-test="probe-name-input"]').setValue('Antigravity-Node-2')
-    await wrapper.find('[data-test="probe-url-input"]').setValue('http://127.0.0.1:8080')
-    await wrapper.find('[data-test="probe-key-input"]').setValue('sk-test-secret-key')
-    await wrapper.find('[data-test="probe-submit-btn"]').trigger('click')
+    await wrapper.find('[data-test="channel-name-input"]').setValue('Antigravity-Node-2')
+    await wrapper.find('[data-test="base-url-input"]').setValue('http://127.0.0.1:8080')
+    await wrapper.find('[data-test="api-key-input"]').setValue('sk-test-secret-key')
+    await wrapper.find('[data-test="probe-btn"]').trigger('click')
     await flushPromises()
 
     // Unselect claude-3-7-sonnet
@@ -323,7 +323,7 @@ describe('ChannelQuickSyncModal.vue', () => {
     await flushPromises()
 
     // Go to step 3 and commit
-    await wrapper.find('[data-test="next-step-btn"]').trigger('click')
+    await wrapper.find('[data-test="step2-next-btn"]').trigger('click')
     await flushPromises()
 
     await wrapper.find('[data-test="commit-btn"]').trigger('click')

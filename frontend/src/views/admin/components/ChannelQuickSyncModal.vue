@@ -151,7 +151,7 @@
         </div>
 
         <!-- 新建分组展开表单 -->
-        <div v-if="form.createNewGroup" class="mt-4 grid grid-cols-1 gap-4 border-t border-gray-200 pt-4 dark:border-dark-700 sm:grid-cols-2">
+        <div v-if="form.createNewGroup" class="mt-4 grid grid-cols-1 gap-4 border-t border-gray-200 pt-4 dark:border-dark-700 sm:grid-cols-3">
           <div>
             <label class="input-label">{{ t('admin.channels.quickSync.newGroupName', '新分组名称') }} <span class="text-red-500">*</span></label>
             <input
@@ -161,6 +161,19 @@
               data-test="new-group-name-input"
               :placeholder="t('admin.channels.quickSync.newGroupNamePlaceholder', '输入新分组名称')"
             />
+          </div>
+          <div>
+            <label class="input-label">{{ t('admin.groups.form.platform', '分组平台类型') }}</label>
+            <select
+              v-model="form.newGroupPlatform"
+              class="input"
+              data-test="new-group-platform-select"
+            >
+              <option value="antigravity">Antigravity (多协议自动桥接)</option>
+              <option value="gemini">Gemini</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+            </select>
           </div>
           <div>
             <label class="input-label">{{ t('admin.channels.quickSync.newGroupMultiplier', '新分组费率倍率') }}</label>
@@ -721,6 +734,7 @@ const form = reactive({
   default_group_id: 0 as number,
   createNewGroup: false,
   newGroupName: '',
+  newGroupPlatform: 'antigravity',
   newGroupRateMultiplier: 1.0,
   enableMonitor: true,
   monitorModel: '',
@@ -832,6 +846,7 @@ const resetState = () => {
   form.default_group_id = existingGroups.value[0]?.id ?? 0
   form.createNewGroup = false
   form.newGroupName = ''
+  form.newGroupPlatform = 'antigravity'
   form.newGroupRateMultiplier = 1.0
   billingStrategy.mode = 'ratio'
   billingStrategy.ratio = 1.0
@@ -897,6 +912,7 @@ const handleProbe = async () => {
     if (!form.newGroupName) {
       form.newGroupName = form.name ? `${form.name}-group` : 'quick-sync-group'
     }
+    form.newGroupPlatform = form.platform
 
     currentStep.value = 2
   } catch (err: any) {
@@ -1015,6 +1031,7 @@ const handleCommit = async () => {
         ? {
             create: true,
             name: form.newGroupName.trim() || form.name.trim(),
+            platform: form.newGroupPlatform || form.platform,
             rate_multiplier: form.newGroupRateMultiplier || 1.0
           }
         : undefined,

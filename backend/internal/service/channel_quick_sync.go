@@ -55,6 +55,7 @@ type QuickSyncBillingStrategy struct {
 type QuickSyncNewGroupParams struct {
 	Create         bool    `json:"create"`
 	Name           string  `json:"name"`
+	Platform       string  `json:"platform,omitempty"`
 	RateMultiplier float64 `json:"rate_multiplier"`
 }
 
@@ -521,13 +522,18 @@ func (s *ChannelQuickSyncService) CommitQuickSync(ctx context.Context, params Qu
 		if exists {
 			return nil, ErrGroupExists
 		}
+		grpPlatform := platform
+		if strings.TrimSpace(params.NewGroup.Platform) != "" {
+			grpPlatform = NormalizeGroupPlatform(strings.TrimSpace(params.NewGroup.Platform))
+		}
 		newGroup := &Group{
 			Name:           groupName,
 			Description:    fmt.Sprintf("QuickSync group for %s", name),
-			Platform:       platform,
+			Platform:       grpPlatform,
 			RateMultiplier: rateMultiplier,
 			Status:         StatusActive,
 		}
+		newGroup.ModelAllowlist.Enabled = true
 		if err := s.groupRepo.Create(opCtx, newGroup); err != nil {
 			return nil, fmt.Errorf("create new group: %w", err)
 		}
@@ -660,6 +666,7 @@ func (s *ChannelQuickSyncService) CommitQuickSync(ctx context.Context, params Qu
 	if newGroupID > 0 {
 		newGroup, err := s.groupRepo.GetByID(opCtx, newGroupID)
 		if err == nil && newGroup != nil {
+			newGroup.ModelAllowlist.Enabled = true
 			newGroup.ModelAllowlist.Models = groupToModelsMap[newGroupID]
 			_ = s.groupRepo.Update(opCtx, newGroup)
 		}
@@ -728,6 +735,7 @@ func (s *ChannelQuickSyncService) CommitQuickSync(ctx context.Context, params Qu
 		Description:        fmt.Sprintf("QuickSync channel for %s", name),
 		Status:             StatusActive,
 		BillingModelSource: BillingModelSourceChannelMapped,
+		RestrictModels:     true,
 		GroupIDs:           distinctGroupIDs,
 		ModelPricing:       pricingList,
 	}

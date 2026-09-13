@@ -2153,10 +2153,8 @@
           <Select
             v-model="editForm.platform"
             :options="platformOptions"
-            :disabled="true"
             data-tour="group-form-platform"
           />
-          <p class="input-hint">{{ t("admin.groups.platformNotEditable") }}</p>
         </div>
         <template v-if="!authStore.isSimpleMode">
         <!-- 从分组复制账号（编辑时） -->
