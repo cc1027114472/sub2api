@@ -1136,6 +1136,7 @@ func ProvideChannelQuickSyncService(
 	entClient *dbent.Client,
 	channelCacheInvalidator ChannelCacheInvalidator,
 	channelService *ChannelService,
+	channelMonitorService *ChannelMonitorService,
 ) *ChannelQuickSyncService {
 	svc := NewChannelQuickSyncService(
 		cfg,
@@ -1149,5 +1150,6 @@ func ProvideChannelQuickSyncService(
 		channelCacheInvalidator,
 	)
 	svc.SetChannelService(channelService)
+	svc.SetChannelMonitorService(channelMonitorService)
 	return svc
 }

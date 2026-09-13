@@ -260,6 +260,9 @@ export interface QuickSyncCommitParams {
   new_group?: QuickSyncNewGroupParams | null
   billing_strategy?: QuickSyncBillingStrategy | null
   models: QuickSyncCommitModelItem[]
+  enable_monitor?: boolean
+  monitor_model?: string
+  monitor_interval?: number
 }
 
 export interface QuickSyncCommitResult {
@@ -267,6 +270,7 @@ export interface QuickSyncCommitResult {
   account_id: number
   group_ids?: number[]
   model_count?: number
+  monitor_id?: number | null
 }
 
 /**

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -812,5 +813,101 @@ func TestQuickSyncCommit_ModelPricingConstruction(t *testing.T) {
 	require.Equal(t, 0.0, *capturedPricing[1].OutputPrice)
 	require.Equal(t, &perReqPrice, capturedPricing[1].PerRequestPrice)
 }
+
+type mockMonitorSecretEncryptor struct{}
+
+func (m *mockMonitorSecretEncryptor) Encrypt(text string) (string, error) {
+	return "enc:" + text, nil
+}
+func (m *mockMonitorSecretEncryptor) Decrypt(enc string) (string, error) {
+	return strings.TrimPrefix(enc, "enc:"), nil
+}
+
+type mockQuickSyncChannelMonitorRepo struct {
+	ChannelMonitorRepository
+	created []*ChannelMonitor
+}
+
+func (m *mockQuickSyncChannelMonitorRepo) Create(ctx context.Context, mon *ChannelMonitor) error {
+	mon.ID = 7001
+	m.created = append(m.created, mon)
+	return nil
+}
+
+func TestQuickSyncCommit_WithMonitor(t *testing.T) {
+	accountRepo := &mockQuickSyncAccountRepo{}
+	groupRepo := newMockQuickSyncGroupRepo()
+	channelRepo := &mockChannelRepository{}
+	cacheInvalidator := &mockQuickSyncCacheInvalidator{}
+
+	groupRepo.groups[1] = &Group{
+		ID:             1,
+		Name:           "Default Group",
+		Platform:       PlatformAntigravity,
+		ModelAllowlist: GroupModelAllowlist{Enabled: true, Models: []string{}},
+	}
+
+	channelRepo.createFn = func(ctx context.Context, ch *Channel) error {
+		ch.ID = 601
+		return nil
+	}
+	channelRepo.existsByNameFn = func(ctx context.Context, name string) (bool, error) {
+		return false, nil
+	}
+	channelRepo.getGroupsInOtherChannelsFn = func(ctx context.Context, channelID int64, groupIDs []int64) ([]int64, error) {
+		return nil, nil
+	}
+
+	svc := NewChannelQuickSyncService(nil, nil, nil, nil, accountRepo, groupRepo, channelRepo, nil, cacheInvalidator)
+
+	monRepo := &mockQuickSyncChannelMonitorRepo{}
+	monSvc := NewChannelMonitorService(monRepo, &mockMonitorSecretEncryptor{})
+	svc.SetChannelMonitorService(monSvc)
+
+	price := 0.1
+	params := QuickSyncCommitParams{
+		Name:            "Monitor Enabled Channel",
+		BaseURL:         "https://api.example.com",
+		APIKey:          "sk-monitor-key",
+		Platform:        "antigravity",
+		EnableMonitor:   true,
+		MonitorModel:    "gemini-2.5-flash",
+		MonitorInterval: 30,
+		Models: []QuickSyncCommitModelItem{
+			{
+				Model:         "gemini-2.5-flash",
+				TargetGroupID: 1,
+				BillingMode:   "token",
+				InputPrice:    &price,
+				OutputPrice:   &price,
+			},
+			{
+				Model:         "gemini-2.5-pro",
+				TargetGroupID: 1,
+				BillingMode:   "token",
+				InputPrice:    &price,
+				OutputPrice:   &price,
+			},
+		},
+	}
+
+	result, err := svc.CommitQuickSync(context.Background(), params)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.NotNil(t, result.MonitorID)
+	require.Equal(t, int64(7001), *result.MonitorID)
+
+	require.Len(t, monRepo.created, 1)
+	mon := monRepo.created[0]
+	require.Equal(t, "Monitor Enabled Channel 监控", mon.Name)
+	require.Equal(t, MonitorProviderOpenAI, mon.Provider)
+	require.Equal(t, "gemini-2.5-flash", mon.PrimaryModel)
+	require.Equal(t, []string{"gemini-2.5-pro"}, mon.ExtraModels)
+	require.Equal(t, 30, mon.IntervalSeconds)
+	require.Equal(t, true, mon.Enabled)
+	require.Equal(t, "https://api.example.com", mon.Endpoint)
+	require.Equal(t, "sk-monitor-key", mon.APIKey)
+}
+
 
 

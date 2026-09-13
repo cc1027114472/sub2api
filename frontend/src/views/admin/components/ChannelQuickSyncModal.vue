@@ -257,7 +257,59 @@
         </div>
       </div>
 
-      <!-- 3. 模型调配表格与批量操作 -->
+      <!-- 3. 渠道健康监控探针配置卡片 -->
+      <div class="rounded-lg border border-gray-200 bg-gray-50/50 p-4 dark:border-dark-700 dark:bg-dark-800/50">
+        <div class="flex items-center justify-between">
+          <h4 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <Icon name="bolt" size="sm" class="text-primary-600 dark:text-primary-400" />
+            {{ t('admin.channels.quickSync.monitorTitle', '渠道健康监控') }}
+          </h4>
+          <label class="inline-flex items-center cursor-pointer">
+            <input
+              v-model="form.enableMonitor"
+              type="checkbox"
+              class="sr-only peer"
+              data-test="enable-monitor-toggle"
+            />
+            <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600 dark:bg-dark-700"></div>
+            <span class="ms-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+              {{ form.enableMonitor ? t('common.enabled', '已启用') : t('common.disabled', '未启用') }}
+            </span>
+          </label>
+        </div>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {{ t('admin.channels.quickSync.monitorDesc', '自动创建健康巡检探针，定时拨测节点延迟与可用率') }}
+        </p>
+
+        <div v-if="form.enableMonitor" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-200/60 pt-3 dark:border-dark-700/60">
+          <div>
+            <label class="input-label">{{ t('admin.channels.quickSync.monitorPrimaryModel', '主探测模型') }}</label>
+            <select
+              v-model="form.monitorModel"
+              class="input w-full"
+              data-test="monitor-model-select"
+            >
+              <option v-for="m in models" :key="m.id" :value="m.id">
+                {{ m.id }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="input-label">{{ t('admin.channels.quickSync.monitorInterval', '巡检周期 (秒)') }}</label>
+            <input
+              v-model.number="form.monitorInterval"
+              type="number"
+              min="10"
+              step="5"
+              class="input w-full"
+              data-test="monitor-interval-input"
+              placeholder="60"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 模型调配表格与批量操作 -->
       <div>
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
@@ -478,6 +530,15 @@
                 Token: {{ tokenModelCount }} 个 / 按次: {{ perReqModelCount }} 个
               </dd>
             </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-500 dark:text-gray-400">{{ t('admin.channels.quickSync.monitorStatus', '健康监控') }}:</dt>
+              <dd class="font-medium text-gray-900 dark:text-white">
+                <span v-if="form.enableMonitor" class="text-green-600 dark:text-green-400">
+                  {{ form.monitorModel || '默认主模型' }} ({{ form.monitorInterval || 60 }}s 巡检)
+                </span>
+                <span v-else class="text-gray-400">未启用</span>
+              </dd>
+            </div>
           </dl>
         </div>
       </div>
@@ -640,7 +701,10 @@ const form = reactive({
   default_group_id: 0 as number,
   createNewGroup: false,
   newGroupName: '',
-  newGroupRateMultiplier: 1.0
+  newGroupRateMultiplier: 1.0,
+  enableMonitor: true,
+  monitorModel: '',
+  monitorInterval: 60
 })
 
 const billingStrategy = reactive({
@@ -800,6 +864,10 @@ const handleProbe = async () => {
       appStore?.showWarning?.(result.warnings.join('; '))
     }
 
+    if (models.value.length > 0 && !form.monitorModel) {
+      form.monitorModel = models.value[0].id
+    }
+
     // Auto set new group name if empty
     if (!form.newGroupName) {
       form.newGroupName = form.name ? `${form.name}-group` : 'quick-sync-group'
@@ -928,7 +996,10 @@ const handleCommit = async () => {
         input_price: m.billing_mode === 'token' ? m.price_in : undefined,
         output_price: m.billing_mode === 'token' ? m.price_out : undefined,
         per_request_price: m.billing_mode === 'per_request' ? m.per_request_price : undefined
-      }))
+      })),
+      enable_monitor: form.enableMonitor,
+      monitor_model: form.enableMonitor ? (form.monitorModel || models.value[0]?.id) : undefined,
+      monitor_interval: form.enableMonitor ? (form.monitorInterval || 60) : undefined
     }
 
     const result = await adminAPI.channels.quickSyncCommit(payload)

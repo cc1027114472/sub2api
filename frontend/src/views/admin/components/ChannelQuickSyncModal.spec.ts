@@ -275,6 +275,9 @@ describe('ChannelQuickSyncModal.vue', () => {
       base_url: 'http://127.0.0.1:8080',
       api_key: 'sk-test-secret-key',
       platform: 'antigravity',
+      enable_monitor: true,
+      monitor_model: 'gemini-2.5-pro',
+      monitor_interval: 60,
       models: expect.arrayContaining([
         expect.objectContaining({
           model: 'gemini-2.5-pro'

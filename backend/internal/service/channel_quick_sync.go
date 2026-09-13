@@ -13,6 +13,7 @@ import (
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 	"github.com/Wei-Shaw/sub2api/internal/util/urlvalidator"
 )
 
@@ -77,6 +78,9 @@ type QuickSyncCommitParams struct {
 	NewGroup        *QuickSyncNewGroupParams   `json:"new_group"`
 	BillingStrategy *QuickSyncBillingStrategy  `json:"billing_strategy"`
 	Models          []QuickSyncCommitModelItem `json:"models"`
+	EnableMonitor   bool                       `json:"enable_monitor"`
+	MonitorModel    string                     `json:"monitor_model"`
+	MonitorInterval int                        `json:"monitor_interval"`
 }
 
 // QuickSyncCommitResult is returned after a successful quick sync commit.
@@ -85,6 +89,7 @@ type QuickSyncCommitResult struct {
 	AccountID  int64   `json:"account_id"`
 	GroupIDs   []int64 `json:"group_ids"`
 	ModelCount int     `json:"model_count"`
+	MonitorID  *int64  `json:"monitor_id,omitempty"`
 }
 
 // ChannelQuickSyncService handles probing upstream models and quick sync onboarding.
@@ -98,6 +103,7 @@ type ChannelQuickSyncService struct {
 	groupRepo               GroupRepository
 	channelRepo             ChannelRepository
 	channelService          *ChannelService
+	channelMonitorService   *ChannelMonitorService
 	entClient               *dbent.Client
 	channelCacheInvalidator ChannelCacheInvalidator
 	cachePubSub             ChannelCachePubSub
@@ -161,6 +167,11 @@ func (s *ChannelQuickSyncService) SetCachePubSub(cachePubSub ChannelCachePubSub)
 // SetChannelService sets the channel service.
 func (s *ChannelQuickSyncService) SetChannelService(channelService *ChannelService) {
 	s.channelService = channelService
+}
+
+// SetChannelMonitorService sets the channel monitor service.
+func (s *ChannelQuickSyncService) SetChannelMonitorService(channelMonitorService *ChannelMonitorService) {
+	s.channelMonitorService = channelMonitorService
 }
 
 // NormalizeModelID strips whitespace and upstream prefixes such as "models/".
@@ -741,10 +752,59 @@ func (s *ChannelQuickSyncService) CommitQuickSync(ctx context.Context, params Qu
 		_ = s.cachePubSub.NotifyUpdate(ctx)
 	}
 
+	// 8. Optionally create channel health monitor
+	var monitorID *int64
+	if params.EnableMonitor && s.channelMonitorService != nil {
+		primaryModel := strings.TrimSpace(params.MonitorModel)
+		if primaryModel == "" && len(resolvedModels) > 0 {
+			primaryModel = resolvedModels[0].model
+		}
+		interval := params.MonitorInterval
+		if interval <= 0 {
+			interval = 60
+		}
+		monitorProvider := MonitorProviderOpenAI
+		if platform == PlatformGemini {
+			monitorProvider = MonitorProviderGemini
+		}
+
+		var extraModels []string
+		for _, m := range resolvedModels {
+			if m.model != primaryModel {
+				extraModels = append(extraModels, m.model)
+				if len(extraModels) >= 3 {
+					break
+				}
+			}
+		}
+
+		monitorParams := ChannelMonitorCreateParams{
+			Name:            fmt.Sprintf("%s 监控", name),
+			Provider:        monitorProvider,
+			APIMode:         MonitorAPIModeChatCompletions,
+			Endpoint:        baseURL,
+			APIKey:          apiKey,
+			PrimaryModel:    primaryModel,
+			ExtraModels:     extraModels,
+			GroupName:       "",
+			Enabled:         true,
+			IntervalSeconds: interval,
+			CheckMode:       MonitorCheckModeProbe,
+			AccountID:       nil,
+		}
+		monitor, err := s.channelMonitorService.Create(ctx, monitorParams)
+		if err != nil {
+			logger.LegacyPrintf("service.channel_quick_sync", "failed to create channel monitor: %v", err)
+		} else if monitor != nil {
+			monitorID = &monitor.ID
+		}
+	}
+
 	return &QuickSyncCommitResult{
 		ChannelID:  channel.ID,
 		AccountID:  account.ID,
 		GroupIDs:   distinctGroupIDs,
 		ModelCount: len(resolvedModels),
+		MonitorID:  monitorID,
 	}, nil
 }
