@@ -1060,7 +1060,7 @@
 	            @click="handleCcsClientSelect('codex')"
 	            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-200 dark:border-dark-600 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
 	          >
-	            <Icon name="code-bracket" size="xl" class="text-gray-600 dark:text-gray-400" />
+	            <Icon name="codeBracket" size="xl" class="text-gray-600 dark:text-gray-400" />
 	            <span class="font-medium text-gray-900 dark:text-white">{{
 	              t('keys.ccsClientSelect.codex')
 	            }}</span>
