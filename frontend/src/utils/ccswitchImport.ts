@@ -1,6 +1,7 @@
 import type { GroupPlatform } from '@/types'
 
 export const OPENAI_CC_SWITCH_CODEX_MODEL = 'gpt-5.5'
+export const ANTIGRAVITY_CC_SWITCH_CODEX_MODEL = 'claude-sonnet-4-6'
 export const GROK_CC_SWITCH_MODEL = 'grok-4.5'
 
 export type CcSwitchClientType = 'claude' | 'gemini' | 'codex' | 'opencode'
@@ -42,7 +43,7 @@ export function resolveCcSwitchImportConfig(
         return {
           app: 'codex',
           endpoint: `${baseUrl}/antigravity`,
-          model: OPENAI_CC_SWITCH_CODEX_MODEL
+          model: ANTIGRAVITY_CC_SWITCH_CODEX_MODEL
         }
       }
       if (clientType === 'opencode') {

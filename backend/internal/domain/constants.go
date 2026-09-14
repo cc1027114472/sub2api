@@ -169,6 +169,15 @@ var DefaultAntigravityModelMapping = map[string]string{
 	// 其他官方模型
 	"gpt-oss-120b-medium":    "gpt-oss-120b-medium",
 	"tab_flash_lite_preview": "tab_flash_lite_preview",
+	// OpenAI 兼容模型默认映射（用于 Codex / OpenCode 等客户端通过 Antigravity 转发）
+	"gpt-5.5":       "claude-sonnet-4-6",
+	"gpt-5":         "claude-sonnet-4-6",
+	"gpt-5-codex":   "claude-sonnet-4-6",
+	"gpt-5.3-codex": "claude-sonnet-4-6",
+	"gpt-4o":        "claude-sonnet-4-6",
+	"gpt-4o-mini":   "claude-sonnet-4-6",
+	"o1":            "claude-sonnet-4-6",
+	"o3-mini":       "claude-sonnet-4-6",
 }
 
 // DefaultBedrockModelMapping 是 AWS Bedrock 平台的默认模型映射

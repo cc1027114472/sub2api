@@ -391,13 +391,14 @@ func RegisterGatewayRoutes(
 		codexDirect.GET("/models", codexModelsHandler)
 	}
 	// OpenAI Chat Completions API（不带v1前缀的别名）— auto-route based on group platform
-	rootRoute(http.MethodPost, "/chat/completions", bodyLimit, func(c *gin.Context) {
+	chatCompletionsHandler := func(c *gin.Context) {
 		if isOpenAIResponsesCompatibleGatewayPlatform(c) {
 			h.OpenAIGateway.ChatCompletions(c)
 			return
 		}
 		h.Gateway.ChatCompletions(c)
-	})
+	}
+	rootRoute(http.MethodPost, "/chat/completions", bodyLimit, chatCompletionsHandler)
 	rootRoute(http.MethodPost, "/embeddings", textBodyLimit, func(c *gin.Context) {
 		if !isOpenAIOnlyEndpointGatewayPlatform(c) {
 			service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonLocalFeatureGate)
@@ -483,6 +484,22 @@ func RegisterGatewayRoutes(
 	// Antigravity 模型列表
 	r.GET("/antigravity/models", gin.HandlerFunc(apiKeyAuth), requireGroupAnthropic, h.Gateway.AntigravityModels)
 
+	// Antigravity 专用根路由（兼容 Codex/OpenCode 直连 /antigravity 基础路径）
+	antigravityDirect := r.Group("/antigravity")
+	antigravityDirect.Use(bodyLimit)
+	antigravityDirect.Use(clientRequestID)
+	antigravityDirect.Use(opsErrorLogger)
+	antigravityDirect.Use(endpointNorm)
+	antigravityDirect.Use(middleware.ForcePlatform(service.PlatformAntigravity))
+	antigravityDirect.Use(gin.HandlerFunc(apiKeyAuth))
+	antigravityDirect.Use(groupModelAllowlist)
+	antigravityDirect.Use(requireGroupAnthropic)
+	{
+		antigravityDirect.POST("/responses", responsesHandler)
+		antigravityDirect.POST("/responses/*subpath", guardResponsesSubpath(responsesHandler))
+		antigravityDirect.POST("/chat/completions", chatCompletionsHandler)
+	}
+
 	// Antigravity 专用路由（仅使用 antigravity 账户，不混合调度）
 	antigravityV1 := r.Group("/antigravity/v1")
 	antigravityV1.Use(bodyLimit)
@@ -498,6 +515,9 @@ func RegisterGatewayRoutes(
 		antigravityV1.POST("/messages/count_tokens", h.Gateway.CountTokens)
 		antigravityV1.GET("/models", h.Gateway.AntigravityModels)
 		antigravityV1.GET("/usage", h.Gateway.Usage)
+		antigravityV1.POST("/responses", responsesHandler)
+		antigravityV1.POST("/responses/*subpath", guardResponsesSubpath(responsesHandler))
+		antigravityV1.POST("/chat/completions", chatCompletionsHandler)
 	}
 
 	antigravityV1Beta := r.Group("/antigravity/v1beta")

@@ -1,6 +1,8 @@
 import os
+import subprocess
 import sys
 import time
+from pathlib import Path
 import paramiko
 
 # Ensure UTF-8 output even in Windows cmd/pwsh
@@ -16,9 +18,17 @@ USER = "root"
 PASSWORD = "2Q99EAjlnb"
 WORK_DIR = "/root/sub2api"
 DEPLOY_DIR = "/root/sub2api/deploy"
+LOCAL_ROOT = Path(__file__).resolve().parent.parent
 
 def main():
-    print(f"Connecting to {HOST} as {USER}...")
+    print("=== Step 1: Create Local Git Bundle of Latest Commits ===")
+    bundle_path = LOCAL_ROOT / "sub2api_diff.bundle"
+    cmd = ["git", "bundle", "create", str(bundle_path), "HEAD"]
+    print("Running:", " ".join(cmd))
+    subprocess.check_call(cmd, cwd=LOCAL_ROOT)
+    print(f"Bundle created at {bundle_path} ({bundle_path.stat().st_size} bytes)")
+
+    print(f"\nConnecting to {HOST} as {USER}...")
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(
@@ -63,28 +73,34 @@ def main():
         return code, "".join(out_chunks)
 
     try:
-        print("=== Step 1: Ensure Adequate Swap Space ===")
-        run_cmd("""
-            if [ ! -f /swapfile2 ]; then
-                echo "Creating 2GB extra swapfile..."
-                fallocate -l 2G /swapfile2 || dd if=/dev/zero of=/swapfile2 bs=1M count=2048
-                chmod 600 /swapfile2
-                mkswap /swapfile2
-                swapon /swapfile2
-            else
-                swapon /swapfile2 2>/dev/null || true
-            fi
-            swapon --show
-            free -h
-        """)
+        print("\n=== Step 2: Upload Bundle to Server ===")
+        sftp = ssh.open_sftp()
+        remote_bundle = "/tmp/sub2api_diff.bundle"
+        print(f"Uploading {bundle_path} -> {remote_bundle}")
+        sftp.put(str(bundle_path), remote_bundle)
+        sftp.close()
+        print("Upload complete.")
 
-        print("\n=== Step 2: Ensure Environment File & Settings ===")
-        # Restore .env if needed
-        run_cmd(f"if [ ! -f {DEPLOY_DIR}/.env ] && [ -f /root/sub2api_env_backup/.env.bak ]; then cp /root/sub2api_env_backup/.env.bak {DEPLOY_DIR}/.env; fi")
-        
-        # Set Node heap limit to 2560MB so vue-tsc completes cleanly
+        print("\n=== Step 3: Apply Bundle to Server Git Repo ===")
+        run_cmd(f"cd {WORK_DIR} && git bundle verify {remote_bundle}")
+        run_cmd(f"cd {WORK_DIR} && git fetch {remote_bundle} HEAD && git checkout -B main FETCH_HEAD")
+        run_cmd(f"cd {WORK_DIR} && git log -n 3 --oneline")
+        run_cmd(f"rm -f {remote_bundle}")
+
+        print("\n=== Step 4: Ensure Environment Settings & Tags ===")
+        # Get target revision
+        _, rev_out = run_cmd(f"cd {WORK_DIR} && git rev-parse --short=12 HEAD")
+        revision = rev_out.strip()
+        print(f"Target Git Revision: {revision}")
+
+        # Update SUB2API_IMAGE_TAG and ensure NODE_MAX_OLD_SPACE_SIZE
         run_cmd(f"""
             cd {DEPLOY_DIR} && \
+            if grep -q "^SUB2API_IMAGE_TAG=" .env; then \
+                sed -i "s/^SUB2API_IMAGE_TAG=.*/SUB2API_IMAGE_TAG=git-{revision}/" .env; \
+            else \
+                echo "SUB2API_IMAGE_TAG=git-{revision}" >> .env; \
+            fi && \
             if grep -q "^NODE_MAX_OLD_SPACE_SIZE=" .env; then \
                 sed -i "s/^NODE_MAX_OLD_SPACE_SIZE=.*/NODE_MAX_OLD_SPACE_SIZE=2560/" .env; \
             else \
@@ -92,48 +108,33 @@ def main():
             fi
         """)
 
-        # Pull latest code from GitHub origin/main
-        run_cmd(f"cd {WORK_DIR} && git fetch origin main && git checkout main && git reset --hard origin/main")
-
-        # Get latest short revision
-        _, rev_out = run_cmd(f"cd {WORK_DIR} && git rev-parse --short=12 HEAD")
-        revision = rev_out.strip()
-        print(f"Target Git Revision: {revision}")
-
-        run_cmd(f"""
-            cd {DEPLOY_DIR} && \
-            if grep -q "^SUB2API_IMAGE_TAG=" .env; then \
-                sed -i "s/^SUB2API_IMAGE_TAG=.*/SUB2API_IMAGE_TAG=git-{revision}/" .env; \
-            else \
-                echo "SUB2API_IMAGE_TAG=git-{revision}" >> .env; \
-            fi
-        """)
-
         # Make all scripts executable
         run_cmd(f"cd {DEPLOY_DIR} && chmod +x *.sh")
 
-        print("\n=== Step 3: Build Fork Image ===")
+        print("\n=== Step 5: Build Fork Image ===")
         run_cmd(f"cd {DEPLOY_DIR} && COMPOSE_PROJECT_NAME=deploy bash build-fork-image.sh")
 
-        print("\n=== Step 4: Stop Existing Containers and Start Stack ===")
+        print("\n=== Step 6: Stop Existing Containers and Start Stack ===")
         run_cmd("docker rm -f sub2api sub2api-postgres sub2api-redis 2>/dev/null || true")
         run_cmd(f"cd {DEPLOY_DIR} && COMPOSE_PROJECT_NAME=deploy docker compose -f docker-compose.local.yml -f docker-compose.fork.yml up -d --remove-orphans")
 
-        print("\n=== Step 5: Healthcheck Polling ===")
+        print("\n=== Step 7: Healthcheck Polling ===")
         run_cmd("bash -c 'for i in $(seq 1 60); do if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then echo \"Health check passed on attempt $i!\"; exit 0; fi; echo \"Waiting for service to be healthy... ($i/60)\"; sleep 2; done; echo \"Health check timed out\"; exit 1'")
 
-        print("\n=== Step 6: Verify Remote Services & Endpoint ===")
+        print("\n=== Step 8: Verify Remote Services & Endpoint ===")
         run_cmd("docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'")
-        run_cmd("curl -sI http://127.0.0.1:8080/health")
-        run_cmd("curl -sI -k --resolve ukapi.cc:443:127.0.0.1 https://ukapi.cc/health || true")
-        run_cmd("docker logs --tail 30 sub2api")
+        run_cmd("curl -s http://127.0.0.1:8080/health")
+        run_cmd("curl -s -k --resolve ukapi.cc:443:127.0.0.1 https://ukapi.cc/health")
+        run_cmd("docker logs --tail 25 sub2api")
 
         print("\n==========================================")
-        print("  Deployment Completed Successfully!  ")
+        print("  Redeployment Completed Successfully!  ")
         print("==========================================")
 
     finally:
         ssh.close()
+        if bundle_path.exists():
+            bundle_path.unlink()
 
 if __name__ == "__main__":
     main()

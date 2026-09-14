@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ANTIGRAVITY_CC_SWITCH_CODEX_MODEL,
   GROK_CC_SWITCH_MODEL,
   OPENAI_CC_SWITCH_CODEX_MODEL,
   buildCcSwitchImportDeeplink
@@ -94,7 +95,7 @@ describe('ccswitchImport utils', () => {
     expect(params.has('model')).toBe(false)
   })
 
-  it('routes Antigravity + Codex imports to codex app with the Codex model', () => {
+  it('routes Antigravity + Codex imports to codex app with the Antigravity Codex model', () => {
     const params = paramsFromDeeplink(
       buildCcSwitchImportDeeplink({
         ...baseInput,
@@ -105,7 +106,7 @@ describe('ccswitchImport utils', () => {
 
     expect(params.get('app')).toBe('codex')
     expect(params.get('endpoint')).toBe(`${baseInput.baseUrl}/antigravity`)
-    expect(params.get('model')).toBe(OPENAI_CC_SWITCH_CODEX_MODEL)
+    expect(params.get('model')).toBe(ANTIGRAVITY_CC_SWITCH_CODEX_MODEL)
   })
 
   it('routes Antigravity + OpenCode imports to opencode app without a model parameter', () => {
