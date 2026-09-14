@@ -93,4 +93,32 @@ describe('ccswitchImport utils', () => {
     expect(params.get('endpoint')).toBe(`${baseInput.baseUrl}/antigravity`)
     expect(params.has('model')).toBe(false)
   })
+
+  it('routes Antigravity + Codex imports to codex app with the Codex model', () => {
+    const params = paramsFromDeeplink(
+      buildCcSwitchImportDeeplink({
+        ...baseInput,
+        platform: 'antigravity',
+        clientType: 'codex'
+      })
+    )
+
+    expect(params.get('app')).toBe('codex')
+    expect(params.get('endpoint')).toBe(`${baseInput.baseUrl}/antigravity`)
+    expect(params.get('model')).toBe(OPENAI_CC_SWITCH_CODEX_MODEL)
+  })
+
+  it('routes Antigravity + OpenCode imports to opencode app without a model parameter', () => {
+    const params = paramsFromDeeplink(
+      buildCcSwitchImportDeeplink({
+        ...baseInput,
+        platform: 'antigravity',
+        clientType: 'opencode'
+      })
+    )
+
+    expect(params.get('app')).toBe('opencode')
+    expect(params.get('endpoint')).toBe(`${baseInput.baseUrl}/antigravity`)
+    expect(params.has('model')).toBe(false)
+  })
 })

@@ -281,7 +281,11 @@ export default {
       claudeCode: 'Claude Code',
       claudeCodeDesc: '导入为 Claude Code 配置',
       geminiCli: 'Gemini CLI',
-      geminiCliDesc: '导入为 Gemini CLI 配置'
+      geminiCliDesc: '导入为 Gemini CLI 配置',
+      codex: 'Codex',
+      codexDesc: '导入为 Codex 配置',
+      opencode: 'OpenCode',
+      opencodeDesc: '导入为 OpenCode 配置'
     },
     // 配额和有效期
     quotaLimit: '额度限制',

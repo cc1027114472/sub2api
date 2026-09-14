@@ -3,7 +3,7 @@ import type { GroupPlatform } from '@/types'
 export const OPENAI_CC_SWITCH_CODEX_MODEL = 'gpt-5.5'
 export const GROK_CC_SWITCH_MODEL = 'grok-4.5'
 
-export type CcSwitchClientType = 'claude' | 'gemini'
+export type CcSwitchClientType = 'claude' | 'gemini' | 'codex' | 'opencode'
 
 export interface CcSwitchImportConfig {
   app: string
@@ -32,8 +32,27 @@ export function resolveCcSwitchImportConfig(
 ): CcSwitchImportConfig {
   switch (platform || 'anthropic') {
     case 'antigravity':
+      if (clientType === 'gemini') {
+        return {
+          app: 'gemini',
+          endpoint: `${baseUrl}/antigravity`
+        }
+      }
+      if (clientType === 'codex') {
+        return {
+          app: 'codex',
+          endpoint: `${baseUrl}/antigravity`,
+          model: OPENAI_CC_SWITCH_CODEX_MODEL
+        }
+      }
+      if (clientType === 'opencode') {
+        return {
+          app: 'opencode',
+          endpoint: `${baseUrl}/antigravity`
+        }
+      }
       return {
-        app: clientType === 'gemini' ? 'gemini' : 'claude',
+        app: 'claude',
         endpoint: `${baseUrl}/antigravity`
       }
     case 'openai':

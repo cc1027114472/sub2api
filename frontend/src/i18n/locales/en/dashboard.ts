@@ -277,6 +277,10 @@ export default {
       claudeCodeDesc: 'Import as Claude Code configuration',
       geminiCli: 'Gemini CLI',
       geminiCliDesc: 'Import as Gemini CLI configuration',
+      codex: 'Codex',
+      codexDesc: 'Import as Codex configuration',
+      opencode: 'OpenCode',
+      opencodeDesc: 'Import as OpenCode configuration',
     },
     // Quota and expiration
     quotaLimit: 'Quota Limit',
