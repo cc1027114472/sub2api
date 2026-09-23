@@ -36,6 +36,14 @@ func NewModelPlazaHandler(
 	}
 }
 
+// PlazaService returns the underlying ModelPlazaService instance.
+func (h *ModelPlazaHandler) PlazaService() *service.ModelPlazaService {
+	if h == nil {
+		return nil
+	}
+	return h.plazaService
+}
+
 // modelPlazaOfficialPricing 官方参考价（USD per token，与计费目录同源）。
 type modelPlazaOfficialPricing struct {
 	InputPrice        *float64 `json:"input_price"`

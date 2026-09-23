@@ -30,6 +30,14 @@ func (h *GatewayHandler) pinnedOpenAIModels(c *gin.Context, group *service.Group
 		return
 	}
 	if err != nil {
+		var groupID *int64
+		if group != nil {
+			groupID = &group.ID
+		}
+		if plazaModels := h.getPlazaModelIDs(c.Request.Context(), groupID); len(plazaModels) > 0 {
+			writeOpenAIModelsList(c, plazaModels)
+			return
+		}
 		if errors.Is(err, service.ErrNoPinnedCodexModelsAccounts) {
 			writeOpenAIModelsError(c, http.StatusServiceUnavailable, "upstream_error", "No available OpenAI model discovery accounts")
 			return

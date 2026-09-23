@@ -219,6 +219,9 @@ func ProvideHandlers(
 	_ *service.IdempotencyCleanupService,
 	_ *service.OpenAIQuotaAutoResetService,
 ) *Handlers {
+	if gatewayHandler != nil && modelPlazaHandler != nil {
+		gatewayHandler.SetModelPlazaService(modelPlazaHandler.PlazaService())
+	}
 	return &Handlers{
 		Auth:             authHandler,
 		User:             userHandler,

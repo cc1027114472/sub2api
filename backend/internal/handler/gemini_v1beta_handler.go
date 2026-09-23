@@ -87,6 +87,23 @@ func (h *GatewayHandler) GeminiV1BetaListModels(c *gin.Context) {
 			c.JSON(http.StatusOK, gemini.ModelsListResponse{Models: filterGeminiModels(gemini.DefaultModels())})
 			return
 		}
+		// 降级：从模型广场获取支持的模型列表并返回
+		if plazaModels := h.getPlazaModelIDs(c.Request.Context(), apiKey.GroupID); len(plazaModels) > 0 {
+			geminiList := make([]gemini.Model, 0, len(plazaModels))
+			for _, m := range plazaModels {
+				name := m
+				if !strings.HasPrefix(name, "models/") {
+					name = "models/" + name
+				}
+				geminiList = append(geminiList, gemini.Model{
+					Name:                       name,
+					DisplayName:                m,
+					SupportedGenerationMethods: []string{"generateContent", "countTokens"},
+				})
+			}
+			c.JSON(http.StatusOK, gemini.ModelsListResponse{Models: filterGeminiModels(geminiList)})
+			return
+		}
 		markOpsRoutingCapacityLimitedIfNoAvailable(c, err)
 		googleError(c, http.StatusServiceUnavailable, "No available Gemini accounts: "+err.Error())
 		return

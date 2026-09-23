@@ -192,6 +192,9 @@ func RegisterGatewayRoutes(
 	gateway.GET("/sub2api/billing", h.Gateway.KeyBillingInfo)
 	gateway.Use(groupModelAllowlist)
 	gateway.Use(compositeTarget)
+	// /v1/models should be accessible to all platform groups, not restricted to Anthropic.
+	gateway.GET("/models", modelsHandler)
+	gateway.GET("/models/:model", h.Gateway.Models)
 	gateway.Use(requireGroupAnthropic)
 	{
 		// /v1/messages: auto-route based on group platform
@@ -205,12 +208,6 @@ func RegisterGatewayRoutes(
 		// /v1/messages/count_tokens: OpenAI bridges upstream, Grok estimates
 		// locally, and Anthropic-compatible platforms retain their existing path.
 		gateway.POST("/messages/count_tokens", countTokensHandler)
-		// Codex CLI / Codex app refresh their model picker from the provider's
-		// /models endpoint with a client_version query and expect the ChatGPT
-		// Codex manifest format; other clients keep the OpenAI-style list.
-		gateway.GET("/models", modelsHandler)
-		// Single-model discovery never selects the Codex client_version manifest.
-		gateway.GET("/models/:model", h.Gateway.Models)
 		gateway.GET("/usage", h.Gateway.Usage)
 		gateway.POST("/live", h.OpenAIGateway.Live)
 		gateway.GET("/live/:call_id", h.OpenAIGateway.LiveSideband)
@@ -374,8 +371,11 @@ func RegisterGatewayRoutes(
 	rootRoute(http.MethodGet, "/responses", bodyLimit, func(c *gin.Context) {
 		h.OpenAIGateway.ResponsesWebSocket(c)
 	})
-	rootRoute(http.MethodGet, "/models", bodyLimit, modelsHandler)
-	rootRoute(http.MethodGet, "/models/:model", bodyLimit, h.Gateway.Models)
+	modelsRootRoute := func(path string, handler gin.HandlerFunc) {
+		r.Handle(http.MethodGet, path, bodyLimit, clientRequestID, opsErrorLogger, endpointNorm, gin.HandlerFunc(apiKeyAuth), groupModelAllowlist, compositeTarget, handler)
+	}
+	modelsRootRoute("/models", modelsHandler)
+	modelsRootRoute("/models/:model", h.Gateway.Models)
 	rootRoute(http.MethodPost, "/messages/count_tokens", bodyLimit, countTokensHandler)
 	codexDirect := r.Group("/backend-api/codex")
 	codexDirect.Use(bodyLimit, clientRequestID, opsErrorLogger, endpointNorm, gin.HandlerFunc(apiKeyAuth), groupModelAllowlist, compositeTarget, requireGroupAnthropic)

@@ -57,6 +57,7 @@ type GatewayHandler struct {
 	maxAccountSwitchesGemini  int
 	cfg                       *config.Config
 	settingService            *service.SettingService
+	plazaService              *service.ModelPlazaService
 }
 
 // NewGatewayHandler creates a new GatewayHandler
@@ -1128,6 +1129,54 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	}
 }
 
+// SetModelPlazaService sets the ModelPlazaService instance.
+func (h *GatewayHandler) SetModelPlazaService(s *service.ModelPlazaService) {
+	h.plazaService = s
+}
+
+// getPlazaModelIDs extracts model names from the model plaza.
+func (h *GatewayHandler) getPlazaModelIDs(ctx context.Context, groupID *int64) []string {
+	if h.plazaService == nil {
+		return nil
+	}
+	groups, err := h.plazaService.ListGroups(ctx)
+	if err != nil || len(groups) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{})
+	var result []string
+
+	for _, g := range groups {
+		if groupID != nil && g.ID != *groupID {
+			continue
+		}
+		for _, m := range g.Models {
+			if m.Name == "" {
+				continue
+			}
+			if _, ok := seen[m.Name]; !ok {
+				seen[m.Name] = struct{}{}
+				result = append(result, m.Name)
+			}
+		}
+	}
+
+	if len(result) == 0 {
+		for _, g := range groups {
+			for _, m := range g.Models {
+				if m.Name == "" {
+					continue
+				}
+				if _, ok := seen[m.Name]; !ok {
+					seen[m.Name] = struct{}{}
+					result = append(result, m.Name)
+				}
+			}
+		}
+	}
+	return result
+}
+
 // Models lists visible models, or retrieves the exact list entry for a model path parameter.
 // GET /v1/models and /v1/models/:model (also exposed through root aliases)
 // Returns models based on account configurations (model_mapping whitelist)
@@ -1154,6 +1203,9 @@ func (h *GatewayHandler) Models(c *gin.Context) {
 
 	if platform == service.PlatformComposite {
 		availableModels := h.compositeAvailableModels(c.Request.Context(), groupID)
+		if len(availableModels) == 0 {
+			availableModels = h.getPlazaModelIDs(c.Request.Context(), groupID)
+		}
 		if apiKey != nil && apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() {
 			source := availableModels
 			if len(source) == 0 {
@@ -1172,6 +1224,10 @@ func (h *GatewayHandler) Models(c *gin.Context) {
 
 	// Get available models from account configurations for the selected group platform.
 	availableModels := h.gatewayService.GetAvailableModels(c.Request.Context(), groupID, platform)
+	if len(availableModels) == 0 {
+		availableModels = h.getPlazaModelIDs(c.Request.Context(), groupID)
+	}
+
 	if apiKey != nil && apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() {
 		source := modelListingSource(platform, availableModels, defaultModelIDsForPlatform(platform))
 		writeAllowlistedModelsList(c, platform, apiKey.Group.ModelAllowlist.FilterForListing(source))
