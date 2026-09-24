@@ -35,9 +35,9 @@ export const defaultAgentDownloadConfig: AgentDownloadConfig = {
   version: 'v1.0.0',
   releaseDate: '2026-09-24',
   windows: {
-    installerUrl: '/downloads/Mowan-Harness-Setup.exe',
-    portableUrl: '/downloads/Mowan-Harness-portable.zip',
-    size: '171.5 MB',
+    installerUrl: '/downloads/Mowan-Agent-Setup.exe',
+    portableUrl: '/downloads/Mowan-Agent-Setup.exe',
+    size: '329.5 MB',
     releaseDate: '2026-09-24',
   },
   mac: {
