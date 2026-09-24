@@ -73,7 +73,7 @@
               </button>
             </div>
           </div>
-          <button @click="showCreateModal = true" class="btn btn-primary" data-tour="keys-create-btn">
+          <button @click="openCreateModal" class="btn btn-primary" data-tour="keys-create-btn">
             <Icon name="plus" size="md" class="mr-2" />
             {{ t('keys.createKey') }}
           </button>
@@ -435,7 +435,7 @@
               :title="t('keys.noKeysYet')"
               :description="t('keys.createFirstKey')"
               :action-text="t('keys.createKey')"
-              @action="showCreateModal = true"
+              @action="openCreateModal"
             />
           </template>
         </DataTable>
@@ -462,11 +462,21 @@
     >
       <form id="key-form" @submit.prevent="handleSubmit" class="space-y-5">
         <div>
-          <label class="input-label">{{ t('keys.nameLabel') }}</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="input-label mb-0">{{ t('keys.nameLabel') }}</label>
+            <button
+              v-if="!showEditModal"
+              type="button"
+              class="inline-flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+              @click="generateNewRandomName"
+            >
+              <Icon name="refresh" size="xs" />
+              <span>{{ t('keys.randomName') }}</span>
+            </button>
+          </div>
           <input
             v-model="formData.name"
             type="text"
-            required
             class="input"
             :placeholder="t('keys.namePlaceholder')"
             data-tour="key-form-name"
@@ -1163,7 +1173,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, computed, onMounted, onUnmounted, type ComponentPublicInstance } from 'vue'
+	import { ref, reactive, computed, watch, onMounted, onUnmounted, type ComponentPublicInstance } from 'vue'
 	import { useI18n } from 'vue-i18n'
 	import { useAppStore } from '@/stores/app'
 	import { useOnboardingStore } from '@/stores/onboarding'
@@ -1192,6 +1202,7 @@ import type { Column } from '@/components/common/types'
 import type { BatchApiKeyUsageStats } from '@/api/usage'
 import { formatDateTime } from '@/utils/format'
 import { maskApiKey } from '@/utils/maskApiKey'
+import { getRandomKeyName } from '@/utils/randomKeyNames'
 import {
   buildCcSwitchImportDeeplink,
   type CcSwitchClientType
@@ -1556,6 +1567,9 @@ const loadApiKeys = async () => {
 const loadGroups = async () => {
   try {
     groups.value = await userGroupsAPI.getAvailable()
+    if (showCreateModal.value && !showEditModal.value && formData.value.group_id === null && groups.value.length > 0) {
+      formData.value.group_id = groups.value[0].id
+    }
   } catch (error) {
     console.error('Failed to load groups:', error)
   }
@@ -1624,6 +1638,52 @@ const handleSort = (key: string, order: 'asc' | 'desc') => {
   pagination.value.page = 1
   loadApiKeys()
 }
+
+const resetFormData = () => {
+  formData.value = {
+    name: '',
+    group_id: null,
+    status: 'active',
+    use_custom_key: false,
+    custom_key: '',
+    enable_ip_restriction: false,
+    ip_whitelist: '',
+    ip_blacklist: '',
+    enable_quota: false,
+    quota: null,
+    enable_rate_limit: false,
+    rate_limit_5h: null,
+    rate_limit_1d: null,
+    rate_limit_7d: null,
+    enable_expiration: false,
+    expiration_preset: '30',
+    expiration_date: ''
+  }
+}
+
+const openCreateModal = () => {
+  showEditModal.value = false
+  selectedKey.value = null
+  resetFormData()
+  formData.value.name = getRandomKeyName()
+  if (groupOptions.value.length > 0) {
+    formData.value.group_id = groupOptions.value[0].value
+  }
+  showCreateModal.value = true
+}
+
+const generateNewRandomName = () => {
+  formData.value.name = getRandomKeyName()
+}
+
+watch(
+  () => groupOptions.value,
+  (options) => {
+    if (showCreateModal.value && !showEditModal.value && formData.value.group_id === null && options.length > 0) {
+      formData.value.group_id = options[0].value
+    }
+  }
+)
 
 const editKey = (key: ApiKey) => {
   selectedKey.value = key
@@ -1784,10 +1844,11 @@ const handleSubmit = async () => {
   } : { rate_limit_5h: 0, rate_limit_1d: 0, rate_limit_7d: 0 }
 
   submitting.value = true
+  const finalName = formData.value.name.trim() || getRandomKeyName()
   try {
     if (showEditModal.value && selectedKey.value) {
       const updates: UpdateApiKeyRequest = {
-        name: formData.value.name,
+        name: finalName,
         group_id: formData.value.group_id,
         ip_whitelist: ipWhitelist,
         ip_blacklist: ipBlacklist,
@@ -1805,7 +1866,7 @@ const handleSubmit = async () => {
     } else {
       const customKey = formData.value.use_custom_key ? formData.value.custom_key : undefined
       await keysAPI.create(
-        formData.value.name,
+        finalName,
         formData.value.group_id,
         customKey,
         ipWhitelist,
@@ -1855,25 +1916,7 @@ const closeModals = () => {
   showCreateModal.value = false
   showEditModal.value = false
   selectedKey.value = null
-  formData.value = {
-    name: '',
-    group_id: null,
-    status: 'active',
-    use_custom_key: false,
-    custom_key: '',
-    enable_ip_restriction: false,
-    ip_whitelist: '',
-    ip_blacklist: '',
-    enable_quota: false,
-    quota: null,
-    enable_rate_limit: false,
-    rate_limit_5h: null,
-    rate_limit_1d: null,
-    rate_limit_7d: null,
-    enable_expiration: false,
-    expiration_preset: '30',
-    expiration_date: ''
-  }
+  resetFormData()
 }
 
 // Show reset quota confirmation dialog

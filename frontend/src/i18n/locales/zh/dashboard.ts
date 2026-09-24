@@ -100,6 +100,7 @@ export default {
     disable: '禁用',
     nameLabel: '名称',
     namePlaceholder: '我的 API 密钥',
+    randomName: '随机生成',
     groupLabel: '分组',
     selectGroup: '选择分组',
     statusLabel: '状态',

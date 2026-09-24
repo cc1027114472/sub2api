@@ -100,6 +100,7 @@ export default {
     disable: 'Disable',
     nameLabel: 'Name',
     namePlaceholder: 'My API Key',
+    randomName: 'Randomize',
     groupLabel: 'Group',
     selectGroup: 'Select a group',
     statusLabel: 'Status',
