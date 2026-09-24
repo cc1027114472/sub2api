@@ -388,7 +388,7 @@
                 <Icon name="upload" size="sm" />
                 <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
               </button>
-              <!-- Import to Mowan Agent Button -->
+              <!-- Import to mowan-harness (魔丸) Button -->
               <button
                 @click="importToMowan(row)"
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
