@@ -61,6 +61,45 @@ func (h *GatewayHandler) GeminiV1BetaListModels(c *gin.Context) {
 		return filtered
 	}
 
+	// 当配置了模型广场时，统一仅返回模型广场中已上架的模型
+	if h.plazaService != nil {
+		plazaModels := h.getPlazaModelIDs(c.Request.Context(), apiKey.GroupID)
+		if forcePlatform == service.PlatformAntigravity || platform == service.PlatformAntigravity {
+			geminiList := make([]antigravity.GeminiModel, 0, len(plazaModels))
+			for _, m := range plazaModels {
+				name := m
+				if !strings.HasPrefix(name, "models/") {
+					name = "models/" + name
+				}
+				if apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() && !apiKey.Group.ModelAllowlist.Allows(name) {
+					continue
+				}
+				geminiList = append(geminiList, antigravity.GeminiModel{
+					Name:                       name,
+					DisplayName:                m,
+					SupportedGenerationMethods: []string{"generateContent", "countTokens"},
+				})
+			}
+			c.JSON(http.StatusOK, antigravity.GeminiModelsListResponse{Models: geminiList})
+			return
+		}
+
+		geminiList := make([]gemini.Model, 0, len(plazaModels))
+		for _, m := range plazaModels {
+			name := m
+			if !strings.HasPrefix(name, "models/") {
+				name = "models/" + name
+			}
+			geminiList = append(geminiList, gemini.Model{
+				Name:                       name,
+				DisplayName:                m,
+				SupportedGenerationMethods: []string{"generateContent", "countTokens"},
+			})
+		}
+		c.JSON(http.StatusOK, gemini.ModelsListResponse{Models: filterGeminiModels(geminiList)})
+		return
+	}
+
 	// 强制 antigravity 模式或 antigravity 分组：返回 antigravity 支持的模型列表
 	if forcePlatform == service.PlatformAntigravity || platform == service.PlatformAntigravity {
 		if apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() {
@@ -85,23 +124,6 @@ func (h *GatewayHandler) GeminiV1BetaListModels(c *gin.Context) {
 		if hasAntigravity {
 			// antigravity 账户使用静态模型列表
 			c.JSON(http.StatusOK, gemini.ModelsListResponse{Models: filterGeminiModels(gemini.DefaultModels())})
-			return
-		}
-		// 降级：从模型广场获取支持的模型列表并返回
-		if plazaModels := h.getPlazaModelIDs(c.Request.Context(), apiKey.GroupID); len(plazaModels) > 0 {
-			geminiList := make([]gemini.Model, 0, len(plazaModels))
-			for _, m := range plazaModels {
-				name := m
-				if !strings.HasPrefix(name, "models/") {
-					name = "models/" + name
-				}
-				geminiList = append(geminiList, gemini.Model{
-					Name:                       name,
-					DisplayName:                m,
-					SupportedGenerationMethods: []string{"generateContent", "countTokens"},
-				})
-			}
-			c.JSON(http.StatusOK, gemini.ModelsListResponse{Models: filterGeminiModels(geminiList)})
 			return
 		}
 		markOpsRoutingCapacityLimitedIfNoAvailable(c, err)

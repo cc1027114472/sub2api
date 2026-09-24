@@ -1424,5 +1424,56 @@ func TestGatewayModels_OnlyReturnsPlazaModelsWhenPlazaConfigured(t *testing.T) {
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
 		require.Empty(t, got.Data)
 	}
+
+	// 3. Gemini /v1beta/models 配合模型广场：只返回模型广场中开放的模型
+	{
+		rec := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(rec)
+		c.Request = httptest.NewRequest(http.MethodGet, "/v1beta/models", nil)
+		c.Set(string(middleware2.ContextKeyAPIKey), &service.APIKey{
+			GroupID: &groupActiveID,
+			Group: &service.Group{
+				ID:       groupActiveID,
+				Platform: service.PlatformGemini,
+			},
+		})
+		h.GeminiV1BetaListModels(c)
+
+		require.Equal(t, http.StatusOK, rec.Code)
+		var got struct {
+			Models []struct {
+				Name string `json:"name"`
+			} `json:"models"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
+		require.Len(t, got.Models, 1)
+		require.Equal(t, "models/model-open-in-plaza", got.Models[0].Name)
+	}
+
+	// 4. Antigravity /antigravity/models 配合模型广场：只返回模型广场中开放的模型
+	{
+		rec := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(rec)
+		c.Request = httptest.NewRequest(http.MethodGet, "/antigravity/models", nil)
+		c.Set(string(middleware2.ContextKeyAPIKey), &service.APIKey{
+			GroupID: &groupActiveID,
+			Group: &service.Group{
+				ID:       groupActiveID,
+				Platform: service.PlatformAntigravity,
+			},
+		})
+		h.AntigravityModels(c)
+
+		require.Equal(t, http.StatusOK, rec.Code)
+		var got struct {
+			Object string `json:"object"`
+			Data   []struct {
+				ID string `json:"id"`
+			} `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
+		require.Len(t, got.Data, 1)
+		require.Equal(t, "model-open-in-plaza", got.Data[0].ID)
+	}
 }
 

@@ -1569,6 +1569,31 @@ func mergeModelIDs(primary, secondary []string) []string {
 // GET /antigravity/models
 // 分组级模型白名单开启时按白名单过滤。
 func (h *GatewayHandler) AntigravityModels(c *gin.Context) {
+	if h.plazaService != nil {
+		var groupID *int64
+		if apiKey, ok := middleware2.GetAPIKeyFromContext(c); ok && apiKey != nil && apiKey.Group != nil {
+			groupID = &apiKey.Group.ID
+		}
+		plazaModels := h.getPlazaModelIDs(c.Request.Context(), groupID)
+		models := make([]antigravity.ClaudeModel, 0, len(plazaModels))
+		for _, m := range plazaModels {
+			if apiKey, ok := middleware2.GetAPIKeyFromContext(c); ok && apiKey != nil && apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() {
+				if !apiKey.Group.ModelAllowlist.Allows(m) {
+					continue
+				}
+			}
+			models = append(models, antigravity.ClaudeModel{
+				ID:          m,
+				Type:        "model",
+				DisplayName: m,
+			})
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"object": "list",
+			"data":   models,
+		})
+		return
+	}
 	models := antigravity.DefaultModels()
 	if apiKey, ok := middleware2.GetAPIKeyFromContext(c); ok && apiKey != nil && apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() {
 		filtered := make([]antigravity.ClaudeModel, 0, len(models))
