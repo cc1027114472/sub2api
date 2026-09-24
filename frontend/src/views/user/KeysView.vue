@@ -388,6 +388,15 @@
                 <Icon name="upload" size="sm" />
                 <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
               </button>
+              <!-- Import to Mowan Agent Button -->
+              <button
+                @click="importToMowan(row)"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                :title="t('keys.importToMowan')"
+              >
+                <Icon name="sparkles" size="sm" />
+                <span class="text-xs">{{ t('keys.importToMowan') }}</span>
+              </button>
               <!-- Postman / cURL Test Button -->
               <button
                 @click="openPostmanModal(row)"
@@ -1207,6 +1216,7 @@ import {
   buildCcSwitchImportDeeplink,
   type CcSwitchClientType
 } from '@/utils/ccswitchImport'
+import { buildMowanImportDeeplink } from '@/utils/mowanImport'
 
 // Helper to format date for datetime-local input
 const formatDateTimeLocal = (isoDate: string): string => {
@@ -2049,6 +2059,33 @@ const handleCcsClientSelect = (clientType: CcSwitchClientType) => {
   }
   showCcsClientSelect.value = false
   pendingCcsRow.value = null
+}
+
+const importToMowan = (row: ApiKey) => {
+  const baseUrl = publicSettings.value?.api_base_url || window.location.origin
+  const platform = row.group?.platform || 'anthropic'
+  const siteName = (publicSettings.value?.site_name || 'Sub2API').trim() || 'Sub2API'
+  const groupName = row.group?.name ? ` - ${row.group.name}` : ''
+  const providerName = `${siteName}${groupName}`
+
+  const deeplink = buildMowanImportDeeplink({
+    baseUrl,
+    platform,
+    providerName,
+    apiKey: row.key
+  })
+
+  try {
+    window.open(deeplink, '_self')
+
+    setTimeout(() => {
+      if (document.hasFocus()) {
+        appStore.showError(t('keys.mowanNotInstalled'))
+      }
+    }, 1200)
+  } catch (error) {
+    appStore.showError(t('keys.mowanNotInstalled'))
+  }
 }
 
 const closeCcsClientSelect = () => {

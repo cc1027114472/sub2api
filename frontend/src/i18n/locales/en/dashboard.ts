@@ -96,6 +96,7 @@ export default {
     copyToClipboard: 'Copy to clipboard',
     copied: 'Copied!',
     importToCcSwitch: 'Import to CCS',
+    importToMowan: 'Import to Mowan',
     enable: 'Enable',
     disable: 'Disable',
     nameLabel: 'Name',
@@ -271,6 +272,7 @@ export default {
     ipBlacklistHint: 'One IP or CIDR per line. These IPs will be blocked from using this key.',
     ipRestrictionEnabled: 'IP restriction enabled',
     ccSwitchNotInstalled: 'CC-Switch is not installed or the protocol handler is not registered. Please install CC-Switch first or manually copy the API key.',
+    mowanNotInstalled: 'Mowan Agent was not detected. Please start it or visit http://127.0.0.1:3090 in your browser.',
     ccsClientSelect: {
       title: 'Select Client',
       description: 'Please select the client type to import to CC-Switch:',
