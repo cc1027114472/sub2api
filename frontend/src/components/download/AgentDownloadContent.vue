@@ -71,6 +71,9 @@
       </div>
     </div>
 
+    <!-- 客户端功能预览与上手指南 (方案 A: 图文全景流) -->
+    <AgentGuideTour />
+
     <!-- 快速接入配置助手 -->
     <div class="rounded-3xl border border-gray-200/80 bg-white p-6 shadow-sm dark:border-dark-700/60 dark:bg-dark-900 sm:p-8">
       <div class="flex flex-col justify-between gap-4 border-b border-gray-100 pb-6 dark:border-dark-800 sm:flex-row sm:items-center">
@@ -355,6 +358,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
+import AgentGuideTour from './AgentGuideTour.vue'
 import { defaultAgentDownloadConfig, resolvePlatformDownload } from '@/constants/agentDownload'
 import { useAuthStore } from '@/stores/auth'
 import * as keysAPI from '@/api/keys'

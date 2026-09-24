@@ -686,6 +686,37 @@ export default {
     copyBtn: '复制完整配置',
     copyUrlBtn: '复制地址',
     copyKeyBtn: '复制密钥',
+    tour: {
+      badge: '图文全景体验',
+      title: '客户端功能预览与上手指南',
+      subtitle: '探索魔丸 (mowan-harness) 的强大能力：从一键极速接入到深度自主编程。',
+      clickToEnlarge: '点击查看高清大图',
+      step1: {
+        badge: '工作台体验',
+        title: '极简沉浸，打造属于你的本地 AI 工作台',
+        quote: '“我命由我不由天”',
+        desc: '纯粹优雅的界面交互，开箱即用。原生支持本地工作区绑定（Workspace Write）、PTC 模式以及最新的高并发大模型（Gemini 3.7 / Claude 3.7 / 3.8 等），助您专注创作与开发。',
+        feature1: '极简对话视窗，清爽无杂质',
+        feature2: '工作区隔离，本地文件直接受控读写',
+        feature3: '多会话管理与会话状态实时沉淀'
+      },
+      step2: {
+        badge: 'Sub2API 联动',
+        title: '一键协议唤起，API 密钥与模型自动导入',
+        desc: '只需在 Sub2API 密钥列表点击【导入到魔丸】，即可一键直达客户端设置面板。系统自动填入 API 密钥并完成端到端连通性检测，绿色「● 密钥有效」立即可用，无需手动复制。',
+        feature1: '深链 (mowan://) 协议一键唤醒客户端',
+        feature2: '自动定位模型配置页并展开编辑',
+        feature3: '即刻进行网络连通测试并持久化保存'
+      },
+      step3: {
+        badge: '深度执行力',
+        title: '复杂工程代码生成与实时性能透明监控',
+        desc: '具备真正的代码工程重构与多文件逻辑实现能力。每次运行均在底部实时汇报轮数、执行耗时、首字响应延迟、Token 吞吐速率（tok/s）以及上下文缓存命中率，让推理全过程透明可控。',
+        feature1: '高质量全量代码生成，语法结构严谨',
+        feature2: '首 Token 延迟与吞吐速率实时可见',
+        feature3: '深度缓存监控，大幅节省算力开销'
+      }
+    },
     features: {
       title: '为什么选择魔丸专属智能体？',
       loopTitle: '自主多智能体循环',

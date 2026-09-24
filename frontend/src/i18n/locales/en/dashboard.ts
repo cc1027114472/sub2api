@@ -680,6 +680,37 @@ export default {
     copyBtn: 'Copy Full Config',
     copyUrlBtn: 'Copy URL',
     copyKeyBtn: 'Copy Key',
+    tour: {
+      badge: 'Visual Tour & Guide',
+      title: 'Client Tour & Getting Started Guide',
+      subtitle: 'Explore the capabilities of Mowan (mowan-harness): from one-click setup to autonomous agentic engineering.',
+      clickToEnlarge: 'Click to view high-resolution image',
+      step1: {
+        badge: 'Workbench',
+        title: 'Minimalist & Immersive Local AI Workspace',
+        quote: '"Defying fate..."',
+        desc: 'Clean, elegant, out-of-the-box UI. Native local workspace binding (Workspace Write), PTC mode, and top-tier models (Gemini 3.7 / Claude 3.7 / 3.8), keeping you focused on building.',
+        feature1: 'Distraction-free chat interface',
+        feature2: 'Safe workspace isolation with direct file operations',
+        feature3: 'Multi-conversation management and durable states'
+      },
+      step2: {
+        badge: 'Sub2API Integration',
+        title: 'One-Click Import with Instant Health Check',
+        desc: 'Click "Import to mowan-harness" from your Sub2API keys list to instantly wake the client, populate the API key, run automatic connection validation, and mark the key valid with green dot.',
+        feature1: 'Deep link (mowan://) instant client wakeup',
+        feature2: 'Automatic navigation to model settings',
+        feature3: 'Immediate connection probe and durable storage'
+      },
+      step3: {
+        badge: 'Autonomous Execution',
+        title: 'Complex Code Generation & Real-time Metrics',
+        desc: 'Handles complex architectural code generation and refactoring. Every run reports real-time metrics including rounds, latency, first-token delay, throughput (tok/s), and context cache hit rates.',
+        feature1: 'Production-ready code with complete structure',
+        feature2: 'Real-time first-token delay and token throughput',
+        feature3: 'Deep context cache monitoring for maximum efficiency'
+      }
+    },
     features: {
       title: 'Why Choose Mowan Dedicated Agent?',
       loopTitle: 'Autonomous Multi-Agent Loops',
