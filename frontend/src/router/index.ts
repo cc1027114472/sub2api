@@ -185,6 +185,17 @@ const routes: RouteRecordRaw[] = [
       titleKey: 'modelPlaza.title'
     }
   },
+  {
+    path: '/download',
+    alias: '/client-download',
+    name: 'AgentDownload',
+    component: () => import('@/views/DownloadClientView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Download Agent',
+      titleKey: 'agentDownload.title'
+    }
+  },
 
   // ==================== User Routes ====================
   {

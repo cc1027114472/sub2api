@@ -63,7 +63,7 @@ const authStore = useAuthStore()
 
 const settings = computed(() => appStore.cachedPublicSettings)
 const siteName = computed(() => settings.value?.site_name || '英国api.cc')
-const siteLogo = computed(() => sanitizeUrl(settings.value?.site_logo))
+const siteLogo = computed(() => sanitizeUrl(settings.value?.site_logo || ''))
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const backTarget = computed(() => (authStore.isAdmin ? '/admin/dashboard' : '/dashboard'))
 </script>
