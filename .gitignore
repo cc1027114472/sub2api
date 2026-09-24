@@ -84,6 +84,7 @@ temp/
 *.temp
 *.log
 *.bak
+*.bundle
 .cache/
 .dev/
 .serena/
