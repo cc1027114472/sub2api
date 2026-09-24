@@ -56,13 +56,27 @@ function mountHome(settings: Record<string, unknown> = {}) {
 }
 
 function compactDestination(wrapper: ReturnType<typeof mountHome>) {
-  return wrapper.get('[data-testid="compact-home"]').findComponent(RouterLinkStub).props('to')
+  return wrapper
+    .get('[data-testid="compact-home"]')
+    .findAllComponents(RouterLinkStub)
+    .find((link) => {
+      const to = String(link.props('to'))
+      return to === '/login' || to === '/dashboard' || to === '/admin/dashboard'
+    })
+    ?.props('to')
 }
 
 function modelPlazaDestination(wrapper: ReturnType<typeof mountHome>) {
   return wrapper
     .findAllComponents(RouterLinkStub)
     .find((link) => link.props('to') === '/model-plaza')
+    ?.props('to')
+}
+
+function agentDownloadDestination(wrapper: ReturnType<typeof mountHome>) {
+  return wrapper
+    .findAllComponents(RouterLinkStub)
+    .find((link) => link.props('to') === '/download')
     ?.props('to')
 }
 
@@ -180,5 +194,13 @@ describe('HomeView compact mode', () => {
     })
 
     expect(modelPlazaDestination(wrapper)).toBeUndefined()
+  })
+
+  it('shows the agent download link on home page', () => {
+    const wrapper = mountHome({
+      compact_home_enabled: true,
+    })
+
+    expect(agentDownloadDestination(wrapper)).toBe('/download')
   })
 })
