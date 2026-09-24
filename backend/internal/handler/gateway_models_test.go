@@ -1315,3 +1315,114 @@ func modelIDsForTest(models []gatewayModelItemForTest) []string {
 	}
 	return ids
 }
+
+type stubChannelRepoForPlazaTest struct {
+	service.ChannelRepository
+	channels []service.Channel
+}
+
+func (s *stubChannelRepoForPlazaTest) ListAll(ctx context.Context) ([]service.Channel, error) {
+	return s.channels, nil
+}
+
+type stubGroupRepoForPlazaTest struct {
+	service.GroupRepository
+	groups []service.Group
+}
+
+func (s *stubGroupRepoForPlazaTest) ListActive(ctx context.Context) ([]service.Group, error) {
+	return s.groups, nil
+}
+
+func TestGatewayModels_OnlyReturnsPlazaModelsWhenPlazaConfigured(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	groupActiveID := int64(101)
+	groupEmptyID := int64(102)
+
+	// 账号底层配置了 "model-hidden-mapping"，但渠道只开放了 "model-open-in-plaza"
+	h := newGatewayModelsHandlerForTest(
+		&gatewayModelsAccountRepoStub{
+			byGroup: map[int64][]service.Account{
+				groupActiveID: {
+					{
+						ID:       1,
+						Platform: service.PlatformAnthropic,
+						Credentials: map[string]any{
+							"model_mapping": map[string]any{
+								"model-hidden-mapping": "model-hidden-mapping",
+								"model-open-in-plaza":  "model-open-in-plaza",
+							},
+						},
+					},
+				},
+			},
+		},
+	)
+
+	// 配置模型广场服务：仅 groupActiveID 开放了 model-open-in-plaza，groupEmptyID 没有开放任何模型
+	channelRepo := &stubChannelRepoForPlazaTest{
+		channels: []service.Channel{
+			{
+				ID:       1,
+				Name:     "active-ch",
+				Status:   service.StatusActive,
+				GroupIDs: []int64{groupActiveID},
+				ModelPricing: []service.ChannelModelPricing{
+					{
+						Platform:    service.PlatformAnthropic,
+						Models:      []string{"model-open-in-plaza"},
+						BillingMode: service.BillingModeToken,
+					},
+				},
+			},
+		},
+	}
+	groupRepo := &stubGroupRepoForPlazaTest{
+		groups: []service.Group{
+			{ID: groupActiveID, Name: "active-group", Platform: service.PlatformAnthropic, RateMultiplier: 1},
+			{ID: groupEmptyID, Name: "empty-group", Platform: service.PlatformAnthropic, RateMultiplier: 1},
+		},
+	}
+	plazaService := service.NewModelPlazaService(channelRepo, groupRepo, nil, nil, nil)
+	h.SetModelPlazaService(plazaService)
+
+	// 1. groupActive 只能获取到模型广场开放的 "model-open-in-plaza"，未开放的 "model-hidden-mapping" 获取不到
+	{
+		rec := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(rec)
+		c.Request = httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+		c.Set(string(middleware2.ContextKeyAPIKey), &service.APIKey{
+			Group: &service.Group{
+				ID:       groupActiveID,
+				Platform: service.PlatformAnthropic,
+			},
+		})
+		h.Models(c)
+
+		require.Equal(t, http.StatusOK, rec.Code)
+		var got gatewayModelsResponseForTest
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
+		require.Equal(t, []string{"model-open-in-plaza"}, modelIDsForTest(got.Data))
+	}
+
+	// 2. groupEmpty 没有在模型广场开放任何模型，获取结果为 empty data: []，且不回退默认模型
+	{
+		rec := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(rec)
+		c.Request = httptest.NewRequest(http.MethodGet, "/v1/models", nil)
+		c.Set(string(middleware2.ContextKeyAPIKey), &service.APIKey{
+			Group: &service.Group{
+				ID:       groupEmptyID,
+				Platform: service.PlatformAnthropic,
+			},
+		})
+		h.Models(c)
+
+		require.Equal(t, http.StatusOK, rec.Code)
+		var got gatewayModelsResponseForTest
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &got))
+		require.Empty(t, got.Data)
+	}
+}
+

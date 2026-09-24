@@ -1161,19 +1161,6 @@ func (h *GatewayHandler) getPlazaModelIDs(ctx context.Context, groupID *int64) [
 		}
 	}
 
-	if len(result) == 0 {
-		for _, g := range groups {
-			for _, m := range g.Models {
-				if m.Name == "" {
-					continue
-				}
-				if _, ok := seen[m.Name]; !ok {
-					seen[m.Name] = struct{}{}
-					result = append(result, m.Name)
-				}
-			}
-		}
-	}
 	return result
 }
 
@@ -1202,13 +1189,15 @@ func (h *GatewayHandler) Models(c *gin.Context) {
 	}
 
 	if platform == service.PlatformComposite {
-		availableModels := h.compositeAvailableModels(c.Request.Context(), groupID)
-		if len(availableModels) == 0 {
+		var availableModels []string
+		if h.plazaService != nil {
 			availableModels = h.getPlazaModelIDs(c.Request.Context(), groupID)
+		} else {
+			availableModels = h.compositeAvailableModels(c.Request.Context(), groupID)
 		}
 		if apiKey != nil && apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() {
 			source := availableModels
-			if len(source) == 0 {
+			if len(source) == 0 && h.plazaService == nil {
 				source = defaultModelIDsForPlatform(service.PlatformComposite)
 			}
 			writeAllowlistedModelsList(c, service.PlatformComposite, apiKey.Group.ModelAllowlist.FilterForListing(source))
@@ -1218,18 +1207,27 @@ func (h *GatewayHandler) Models(c *gin.Context) {
 			writeModelsList(c, service.PlatformComposite, availableModels)
 			return
 		}
-		writeModelsList(c, service.PlatformComposite, defaultModelIDsForPlatform(service.PlatformComposite))
+		if h.plazaService == nil {
+			writeModelsList(c, service.PlatformComposite, defaultModelIDsForPlatform(service.PlatformComposite))
+			return
+		}
+		writeModelsList(c, service.PlatformComposite, []string{})
 		return
 	}
 
-	// Get available models from account configurations for the selected group platform.
-	availableModels := h.gatewayService.GetAvailableModels(c.Request.Context(), groupID, platform)
-	if len(availableModels) == 0 {
+	// Get available models from model plaza when configured, or fall back to account configurations.
+	var availableModels []string
+	if h.plazaService != nil {
 		availableModels = h.getPlazaModelIDs(c.Request.Context(), groupID)
+	} else {
+		availableModels = h.gatewayService.GetAvailableModels(c.Request.Context(), groupID, platform)
 	}
 
 	if apiKey != nil && apiKey.Group != nil && apiKey.Group.ModelAllowlistEnabled() {
-		source := modelListingSource(platform, availableModels, defaultModelIDsForPlatform(platform))
+		source := availableModels
+		if len(source) == 0 && h.plazaService == nil {
+			source = modelListingSource(platform, availableModels, defaultModelIDsForPlatform(platform))
+		}
 		writeAllowlistedModelsList(c, platform, apiKey.Group.ModelAllowlist.FilterForListing(source))
 		return
 	}
@@ -1239,22 +1237,27 @@ func (h *GatewayHandler) Models(c *gin.Context) {
 		return
 	}
 
-	// Fallback to default models
-	if platform == service.PlatformOpenAI {
-		writeModelsListResponse(c, openai.DefaultModels)
+	if h.plazaService == nil {
+		// Fallback to default models when plazaService is not configured (e.g. in minimal unit tests)
+		if platform == service.PlatformOpenAI {
+			writeModelsListResponse(c, openai.DefaultModels)
+			return
+		}
+
+		if platform == service.PlatformGemini {
+			writeModelsListResponse(c, geminicli.DefaultModels)
+			return
+		}
+		if platform == service.PlatformGrok {
+			writeGrokModelsList(c, xai.DefaultModelIDs())
+			return
+		}
+
+		writeModelsListResponse(c, claude.DefaultModels)
 		return
 	}
 
-	if platform == service.PlatformGemini {
-		writeModelsListResponse(c, geminicli.DefaultModels)
-		return
-	}
-	if platform == service.PlatformGrok {
-		writeGrokModelsList(c, xai.DefaultModelIDs())
-		return
-	}
-
-	writeModelsListResponse(c, claude.DefaultModels)
+	writeModelsList(c, platform, []string{})
 }
 
 // CodexModels returns the effective group model list using the manifest shape
