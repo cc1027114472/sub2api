@@ -279,6 +279,7 @@ export default {
       'CC-Switch 未安装或协议处理程序未注册。请先安装 CC-Switch 或手动复制 API 密钥。',
     mowanNotInstalled:
       '未检测到魔丸 (mowan-harness)，可尝试手动启动或在浏览器直接打开本地控制台 (http://127.0.0.1:3090)。',
+    mowanImportSuccess: '已唤起魔丸 (mowan-harness)，正在自动导入配置...',
     ccsClientSelect: {
       title: '选择客户端',
       description: '请选择您要导入到 CC-Switch 的客户端类型：',

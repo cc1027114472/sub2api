@@ -1216,7 +1216,7 @@ import {
   buildCcSwitchImportDeeplink,
   type CcSwitchClientType
 } from '@/utils/ccswitchImport'
-import { buildMowanImportDeeplink } from '@/utils/mowanImport'
+import { buildMowanImportDeeplink, buildMowanWebImportUrl } from '@/utils/mowanImport'
 
 // Helper to format date for datetime-local input
 const formatDateTimeLocal = (isoDate: string): string => {
@@ -2061,31 +2061,60 @@ const handleCcsClientSelect = (clientType: CcSwitchClientType) => {
   pendingCcsRow.value = null
 }
 
-const importToMowan = (row: ApiKey) => {
+const importToMowan = async (row: ApiKey) => {
   const baseUrl = publicSettings.value?.api_base_url || window.location.origin
   const platform = row.group?.platform || 'anthropic'
   const siteName = (publicSettings.value?.site_name || 'Sub2API').trim() || 'Sub2API'
   const groupName = row.group?.name ? ` - ${row.group.name}` : ''
   const providerName = `${siteName}${groupName}`
 
-  const deeplink = buildMowanImportDeeplink({
+  const importPayload = {
     baseUrl,
     platform,
     providerName,
     apiKey: row.key
-  })
-
-  try {
-    window.open(deeplink, '_self')
-
-    setTimeout(() => {
-      if (document.hasFocus()) {
-        appStore.showError(t('keys.mowanNotInstalled'))
-      }
-    }, 1200)
-  } catch (error) {
-    appStore.showError(t('keys.mowanNotInstalled'))
   }
+
+  // 1. 尝试快速探测本地魔丸控制台 (3090 端口)
+  let isLocalRunning = false
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 600)
+    await fetch('http://127.0.0.1:3090/', { mode: 'no-cors', cache: 'no-store', signal: controller.signal })
+    clearTimeout(timer)
+    isLocalRunning = true
+  } catch {
+    isLocalRunning = false
+  }
+
+  if (isLocalRunning) {
+    const webUrl = buildMowanWebImportUrl(importPayload)
+    window.open(webUrl, '_blank')
+    appStore.showSuccess(t('keys.mowanImportSuccess'))
+    return
+  }
+
+  // 2. 本地服务尚未运行，使用隐藏 iframe 唤起系统注册的 mowan:// 深度链接
+  const deeplink = buildMowanImportDeeplink(importPayload)
+  const iframe = document.createElement('iframe')
+  iframe.style.display = 'none'
+  iframe.src = deeplink
+  document.body.appendChild(iframe)
+  setTimeout(() => iframe.remove(), 3000)
+
+  appStore.showSuccess(t('keys.mowanImportSuccess'))
+
+  // 3. 延迟 3.5s 检查，若仍未启动且用户未切出，温和提示
+  setTimeout(async () => {
+    try {
+      const c = new AbortController()
+      const tId = setTimeout(() => c.abort(), 600)
+      await fetch('http://127.0.0.1:3090/', { mode: 'no-cors', cache: 'no-store', signal: c.signal })
+      clearTimeout(tId)
+    } catch {
+      appStore.showWarning(t('keys.mowanNotInstalled'))
+    }
+  }, 3500)
 }
 
 const closeCcsClientSelect = () => {

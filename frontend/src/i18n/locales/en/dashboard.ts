@@ -273,6 +273,7 @@ export default {
     ipRestrictionEnabled: 'IP restriction enabled',
     ccSwitchNotInstalled: 'CC-Switch is not installed or the protocol handler is not registered. Please install CC-Switch first or manually copy the API key.',
     mowanNotInstalled: 'mowan-harness was not detected. Please start it or visit http://127.0.0.1:3090 in your browser.',
+    mowanImportSuccess: 'mowan-harness launched, importing configuration...',
     ccsClientSelect: {
       title: 'Select Client',
       description: 'Please select the client type to import to CC-Switch:',
