@@ -32,22 +32,23 @@ export interface AgentDownloadConfig {
 }
 
 export const defaultAgentDownloadConfig: AgentDownloadConfig = {
-  version: 'v1.0.0',
+  version: 'v2.0.2',
   releaseDate: '2026-09-25',
   windows: {
-    installerUrl: '/downloads/Mowan-Harness-Setup.exe',
-    portableUrl: '/downloads/Mowan-Harness-Setup.exe',
-    size: '174.3 MB',
+    installerUrl: '/downloads/Mowan-Agent-Setup-latest.exe',
+    portableUrl: '/downloads/Mowan-Agent-Setup-latest.exe',
+    size: '172.9 MB',
     releaseDate: '2026-09-25',
+    sha256: 'e5f7052113f83ede81f0b02f77e4c1ee6bf41875c6537c3ae39a4e806a1fe0a6',
   },
   mac: {
     armUrl: '',
     intelUrl: '',
-    size: '160 MB',
+    size: '172.9 MB',
     status: 'coming_soon',
   },
   linux: {
-    cliUrl: 'https://github.com',
+    cliUrl: 'https://github.com/wensheng-ai/mowan-agent-releases',
     dockerImage: 'mowan-harness:latest',
     status: 'coming_soon',
   },
@@ -86,3 +87,4 @@ export function resolvePlatformDownload(userAgent: string = ''): ResolvedPlatfor
     platformLabel,
   }
 }
+

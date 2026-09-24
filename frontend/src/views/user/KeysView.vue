@@ -2075,46 +2075,23 @@ const importToMowan = async (row: ApiKey) => {
     apiKey: row.key
   }
 
-  // 1. 尝试快速探测本地魔丸控制台 (3090 端口)
-  let isLocalRunning = false
+  // 1. 尝试静默唤起本地桌面客户端 (mowan:// 深度链接)
   try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 600)
-    await fetch('http://127.0.0.1:3090/', { mode: 'no-cors', cache: 'no-store', signal: controller.signal })
-    clearTimeout(timer)
-    isLocalRunning = true
+    const deeplink = buildMowanImportDeeplink(importPayload)
+    const iframe = document.createElement('iframe')
+    iframe.style.display = 'none'
+    iframe.src = deeplink
+    document.body.appendChild(iframe)
+    setTimeout(() => iframe.remove(), 3000)
   } catch {
-    isLocalRunning = false
+    // ignore
   }
 
-  if (isLocalRunning) {
-    const webUrl = buildMowanWebImportUrl(importPayload)
-    window.open(webUrl, '_blank')
-    appStore.showSuccess(t('keys.mowanImportSuccess'))
-    return
-  }
-
-  // 2. 本地服务尚未运行，使用隐藏 iframe 唤起系统注册的 mowan:// 深度链接
-  const deeplink = buildMowanImportDeeplink(importPayload)
-  const iframe = document.createElement('iframe')
-  iframe.style.display = 'none'
-  iframe.src = deeplink
-  document.body.appendChild(iframe)
-  setTimeout(() => iframe.remove(), 3000)
-
+  // 2. 同时打开本地魔丸 Web 控制台 (3090 端口) 执行配置导入
+  // 用户手势触发的 window.open 不受 Chrome PNA/CORS 策略阻断，直接丝滑打开并导入
+  const webUrl = buildMowanWebImportUrl(importPayload)
+  window.open(webUrl, '_blank')
   appStore.showSuccess(t('keys.mowanImportSuccess'))
-
-  // 3. 延迟 3.5s 检查，若仍未启动且用户未切出，温和提示
-  setTimeout(async () => {
-    try {
-      const c = new AbortController()
-      const tId = setTimeout(() => c.abort(), 600)
-      await fetch('http://127.0.0.1:3090/', { mode: 'no-cors', cache: 'no-store', signal: c.signal })
-      clearTimeout(tId)
-    } catch {
-      appStore.showWarning(t('keys.mowanNotInstalled'))
-    }
-  }, 3500)
 }
 
 const closeCcsClientSelect = () => {

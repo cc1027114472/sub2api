@@ -1,0 +1,16 @@
+{
+  "version": "2.0.2",
+  "releaseDate": "2026-09-25",
+  "minSupportedVersion": "1.0.0",
+  "mandatory": false,
+  "downloadUrl": "https://ukapi.cc/downloads/Mowan-Agent-Setup-latest.exe",
+  "backupDownloadUrl": "https://github.com/wensheng-ai/mowan-agent-releases/releases/download/v2.0.2/Mowan-Agent-Setup-2.0.2.exe",
+  "sha256": "e5f7052113f83ede81f0b02f77e4c1ee6bf41875c6537c3ae39a4e806a1fe0a6",
+  "fileSize": 181344467,
+  "changelog": [
+    "🎉 魔丸 (Mowan Agent) v2.0.2 正式发布",
+    "✨ 接入 ukapi.cc 官方高速下载与在线更新主通道",
+    "🚀 支持设置齿轮红点实时感知与一键静默覆盖升级",
+    "🐛 原生安装程序优化已有安装目录自探与平滑重启"
+  ]
+}

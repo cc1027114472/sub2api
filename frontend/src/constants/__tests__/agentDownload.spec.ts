@@ -4,7 +4,7 @@ import { defaultAgentDownloadConfig, resolvePlatformDownload } from '../agentDow
 describe('agentDownload config', () => {
   it('provides default Windows setup installer configuration', () => {
     expect(defaultAgentDownloadConfig.version).toBeDefined()
-    expect(defaultAgentDownloadConfig.windows.installerUrl).toContain('Mowan-Harness-Setup.exe')
+    expect(defaultAgentDownloadConfig.windows.installerUrl).toContain('Mowan-Agent-Setup-latest.exe')
     expect(defaultAgentDownloadConfig.windows.size).toBeDefined()
   })
 
