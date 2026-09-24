@@ -645,7 +645,7 @@ export default {
 
   // Agent Download
   agentDownload: {
-    title: 'Mowan Agent Dedicated Client',
+    title: 'mowan-harness Dedicated Client',
     subtitle: 'Tailored for this API platform with local security sandbox, multi-agent loops, and automated engineering workflows.',
     badge: 'Official Dedicated Client',
     version: 'Latest Version',
@@ -667,7 +667,7 @@ export default {
     linuxDesc: 'Supports Docker containerization and CLI execution for headless servers and developers.',
     quickStartTitle: 'Quick Onboarding Config Assistant',
     quickStartDesc: 'After installing the client, copy your API Base URL and Key below to start chatting and coding instantly.',
-    step1: '1. Install and launch Mowan Agent',
+    step1: '1. Install and launch mowan-harness',
     step2: '2. Copy the API Base URL and your API Key below',
     step3: '3. Paste into client settings and start agent workflows',
     apiBaseUrl: 'API Base URL',

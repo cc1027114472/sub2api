@@ -651,7 +651,7 @@ export default {
 
   // Agent Download
   agentDownload: {
-    title: '魔丸 (Mowan Agent) 专属客户端',
+    title: '魔丸 (mowan-harness) 专属客户端',
     subtitle: '深度适配本站 API 与模型体系，内置本地安全沙箱、多智能体协同循环与全自动工程工具链。',
     badge: '官方专属客户端',
     version: '最新版本',

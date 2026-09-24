@@ -1,5 +1,5 @@
 /**
- * Configuration and metadata for Mowan Agent client downloads.
+ * Configuration and metadata for mowan-harness client downloads.
  */
 
 export interface AgentPlatformWindows {
@@ -35,8 +35,8 @@ export const defaultAgentDownloadConfig: AgentDownloadConfig = {
   version: 'v1.0.0',
   releaseDate: '2026-09-24',
   windows: {
-    installerUrl: '/downloads/Mowan-Agent-Setup.exe',
-    portableUrl: '/downloads/Mowan-Agent-portable.zip',
+    installerUrl: '/downloads/Mowan-Harness-Setup.exe',
+    portableUrl: '/downloads/Mowan-Harness-portable.zip',
     size: '171.5 MB',
     releaseDate: '2026-09-24',
   },
@@ -48,7 +48,7 @@ export const defaultAgentDownloadConfig: AgentDownloadConfig = {
   },
   linux: {
     cliUrl: 'https://github.com',
-    dockerImage: 'mowan-agent:latest',
+    dockerImage: 'mowan-harness:latest',
     status: 'coming_soon',
   },
 }

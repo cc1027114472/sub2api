@@ -48,7 +48,7 @@
           <span class="hidden sm:inline">{{ t('nav.modelPlaza') }}</span>
         </router-link>
 
-        <!-- Mowan Agent Download Entry -->
+        <!-- mowan-harness Download Entry -->
         <router-link
           v-if="user"
           :to="{ path: '/download', query: { embedded: '1' } }"

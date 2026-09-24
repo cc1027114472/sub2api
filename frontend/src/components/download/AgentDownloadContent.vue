@@ -11,7 +11,7 @@
           <div class="flex h-24 w-24 items-center justify-center rounded-2xl bg-white p-3 shadow-xl ring-1 ring-gray-900/5 transition-transform duration-300 hover:scale-105 dark:bg-dark-800 dark:ring-white/10 sm:h-28 sm:w-28">
             <img
               src="/assets/agent/mowan-logo-128.png"
-              alt="Mowan Agent Logo"
+              alt="mowan-harness Logo"
               class="h-full w-full object-contain"
             />
           </div>
@@ -393,7 +393,7 @@ const selectedKeySecret = computed(() => {
 
 const generatedSnippet = computed(() => {
   const keyStr = selectedKeySecret.value || 'sk-your-api-key-here'
-  return `# Mowan Agent (魔丸) Connection Config
+  return `# mowan-harness (魔丸) Connection Config
 api_url: "${currentApiBaseUrl.value}"
 api_key: "${keyStr}"
 default_model: "gemini-2.5-pro"

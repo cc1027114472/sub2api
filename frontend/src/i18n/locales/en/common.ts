@@ -180,7 +180,7 @@ export default {
     channels: 'Channels',
     availableChannels: 'Available Channels',
     modelPlaza: 'Model Plaza',
-    agentDownload: 'Mowan Agent',
+    agentDownload: 'mowan-harness',
     agentDownloadLong: 'Dedicated Client Download',
     subscriptions: 'Subscriptions',
     accounts: 'Accounts',

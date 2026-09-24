@@ -68,7 +68,7 @@
               <div class="h-2.5 w-2.5 rounded-full bg-red-400/80"></div>
               <div class="h-2.5 w-2.5 rounded-full bg-yellow-400/80"></div>
               <div class="h-2.5 w-2.5 rounded-full bg-green-400/80"></div>
-              <span class="ml-2 text-[11px] font-mono text-gray-400">Mowan Agent - Workbench</span>
+              <span class="ml-2 text-[11px] font-mono text-gray-400">mowan-harness - Workbench</span>
             </div>
             <div class="overflow-hidden rounded-xl bg-white dark:bg-dark-950">
               <img
