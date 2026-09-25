@@ -55,7 +55,13 @@ export default {
       multiAccount: 'Always Reliable',
       multiAccountDesc: 'Smart routing across multiple upstream accounts with automatic failover. Say goodbye to errors.',
       balanceQuota: 'Pay What You Use',
-      balanceQuotaDesc: 'Usage-based billing with quota limits. Full visibility into team consumption.'
+      balanceQuotaDesc: 'Usage-based billing with quota limits. Full visibility into team consumption.',
+      smartScheduling: 'Smart Session Sticky Scheduling',
+      smartSchedulingDesc: 'Automatically binds multi-round long-context sessions to upstream accounts to prevent context loss.',
+      billingQuota: 'Precise Token-level Billing',
+      billingQuotaDesc: 'Supports accurate per-token billing, prompt cache hit discounts, and tiered pricing.',
+      concurrencyControl: 'Deep IDE & Tool Integration',
+      securityStability: 'High Availability & Security Protection'
     },
     // Comparison section
     comparison: {

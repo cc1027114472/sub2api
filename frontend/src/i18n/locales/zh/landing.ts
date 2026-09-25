@@ -55,7 +55,13 @@ export default {
       multiAccount: '稳定可靠',
       multiAccountDesc: '智能调度多个上游账号，自动切换和负载均衡，告别频繁报错。',
       balanceQuota: '用多少付多少',
-      balanceQuotaDesc: '按实际使用量计费，支持设置配额上限，团队用量一目了然。'
+      balanceQuotaDesc: '按实际使用量计费，支持设置配额上限，团队用量一目了然。',
+      smartScheduling: '智能会话粘性调度',
+      smartSchedulingDesc: '针对多轮长上下文会话，自动建立会话与物理上游账号的粘性绑定，避免请求漂移导致上下文丢失。',
+      billingQuota: 'Token 级精准扣费',
+      billingQuotaDesc: '支持按 Token 费率精准计费，Prompt 缓存命中折扣、分级单价清晰透明。',
+      concurrencyControl: 'IDE 深度适配支持',
+      securityStability: '高可用与安全防护'
     },
     // 优势对比
     comparison: {
