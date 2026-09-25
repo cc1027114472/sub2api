@@ -18,7 +18,7 @@
       <nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <router-link to="/home" class="group flex min-w-0 items-center gap-3">
           <div class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200/80 bg-white p-1 shadow-sm transition-transform duration-200 group-hover:scale-105 dark:border-white/10 dark:bg-dark-800">
-            <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
+            <img :src="siteLogo || '/logo.svg?v=2.1.0'" alt="Logo" class="h-full w-full object-contain" />
           </div>
           <div class="flex flex-col">
             <span class="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white">{{ siteName }}</span>

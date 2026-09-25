@@ -22,7 +22,7 @@
       <nav class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div class="flex min-w-0 flex-1 items-center gap-3">
           <img
-            :src="siteLogo || '/logo.svg'"
+            :src="siteLogo || '/logo.svg?v=2.1.0'"
             alt="Logo"
             class="h-9 w-9 shrink-0 rounded-lg object-contain shadow-sm"
           />
@@ -79,7 +79,7 @@
     <main class="flex min-w-0 flex-1 items-center justify-center px-4 py-16 sm:px-6">
       <div class="min-w-0 max-w-2xl text-center">
         <img
-          :src="siteLogo || '/logo.svg'"
+          :src="siteLogo || '/logo.svg?v=2.1.0'"
           alt="Logo"
           class="mx-auto mb-6 h-20 w-20 rounded-2xl object-contain shadow-md"
         />
@@ -126,7 +126,7 @@
         <!-- Logo & Site Name -->
         <router-link to="/home" class="group flex items-center gap-3">
           <div class="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-gray-200/60 bg-white p-1 shadow-sm transition-transform duration-200 group-hover:scale-105 dark:border-white/10 dark:bg-dark-800">
-            <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
+            <img :src="siteLogo || '/logo.svg?v=2.1.0'" alt="Logo" class="h-full w-full object-contain" />
           </div>
           <div class="flex flex-col">
             <span class="text-sm font-bold tracking-tight text-gray-900 dark:text-white">{{ siteName }}</span>
