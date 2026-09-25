@@ -1,21 +1,21 @@
 <template>
   <div class="space-y-12">
     <!-- Hero 区域 -->
-    <div class="relative overflow-hidden rounded-3xl border border-gray-200/80 bg-gradient-to-b from-primary-50/60 via-white to-white p-6 shadow-sm dark:border-dark-700/60 dark:from-primary-950/20 dark:via-dark-900 dark:to-dark-900 sm:p-12">
+    <div class="relative overflow-hidden rounded-3xl border border-gray-200/80 bg-white/70 p-6 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-dark-900/60 sm:p-12">
       <!-- 柔和背景光晕 -->
-      <div class="pointer-events-none absolute -top-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-primary-400/15 blur-3xl dark:bg-primary-500/10"></div>
+      <div class="pointer-events-none absolute -top-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-gradient-to-b from-primary-500/15 via-cyan-500/10 to-transparent blur-3xl"></div>
 
       <div class="relative z-10 flex flex-col items-center text-center">
         <!-- 品牌 Logo 徽章 -->
         <div class="relative mb-6">
-          <div class="flex h-24 w-24 items-center justify-center rounded-2xl bg-white p-3 shadow-xl ring-1 ring-gray-900/5 transition-transform duration-300 hover:scale-105 dark:bg-dark-800 dark:ring-white/10 sm:h-28 sm:w-28">
+          <div class="flex h-24 w-24 items-center justify-center rounded-2xl border border-gray-200/80 bg-white p-3 shadow-xl transition-transform duration-300 hover:scale-105 dark:border-white/10 dark:bg-dark-800 sm:h-28 sm:w-28">
             <img
               src="/assets/agent/mowan-logo-128.png"
               alt="mowan-harness Logo"
               class="h-full w-full object-contain"
             />
           </div>
-          <span class="absolute -bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary-600 px-3 py-0.5 text-xs font-semibold text-white shadow-sm dark:bg-primary-500">
+          <span class="absolute -bottom-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-primary-600 to-indigo-600 px-3.5 py-0.5 text-xs font-semibold text-white shadow-sm">
             {{ t('agentDownload.badge') }}
           </span>
         </div>
@@ -46,7 +46,7 @@
           <a
             :href="detectedPlatform.primaryUrl"
             download
-            class="group inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-primary-600 via-primary-500 to-indigo-600 px-8 py-4 text-base font-bold text-white shadow-lg shadow-primary-500/25 transition-all duration-200 hover:from-primary-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-primary-500/30 active:scale-[0.98] sm:w-auto"
+            class="group inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-primary-600 via-indigo-600 to-cyan-500 px-8 py-4 text-base font-bold text-white shadow-lg shadow-primary-500/25 transition-all duration-200 hover:from-primary-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-primary-500/35 active:scale-[0.98] sm:w-auto"
           >
             <Icon name="download" size="md" class="transition-transform group-hover:-translate-y-0.5" />
             <span>{{ t('agentDownload.downloadPrimary') }}</span>
@@ -56,7 +56,7 @@
             v-if="downloadConfig.windows.portableUrl"
             :href="downloadConfig.windows.portableUrl"
             download
-            class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-300 bg-white px-6 py-4 text-base font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700 dark:hover:text-white sm:w-auto"
+            class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white/80 px-6 py-4 text-base font-semibold text-gray-700 shadow-sm backdrop-blur-sm transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-white/10 dark:bg-dark-800/80 dark:text-dark-200 dark:hover:bg-dark-700 dark:hover:text-white sm:w-auto"
           >
             <Icon name="folder" size="md" />
             <span>{{ t('agentDownload.downloadPortable') }}</span>
@@ -75,8 +75,8 @@
     <AgentGuideTour />
 
     <!-- 快速接入配置助手 -->
-    <div class="rounded-3xl border border-gray-200/80 bg-white p-6 shadow-sm dark:border-dark-700/60 dark:bg-dark-900 sm:p-8">
-      <div class="flex flex-col justify-between gap-4 border-b border-gray-100 pb-6 dark:border-dark-800 sm:flex-row sm:items-center">
+    <div class="rounded-3xl border border-gray-200/80 bg-white/70 p-6 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-dark-900/60 sm:p-8">
+      <div class="flex flex-col justify-between gap-4 border-b border-gray-100 pb-6 dark:border-white/10 sm:flex-row sm:items-center">
         <div>
           <div class="flex items-center gap-2">
             <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400">

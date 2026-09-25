@@ -163,6 +163,7 @@ export default {
 
   // Navigation
   nav: {
+    home: '首页',
     dashboard: '仪表盘',
     announcements: '公告',
     apiKeys: 'API 密钥',
