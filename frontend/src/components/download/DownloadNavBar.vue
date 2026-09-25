@@ -1,67 +1,66 @@
 <template>
   <header
-    class="sticky top-0 z-40 border-b border-gray-200/80 bg-white/75 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-dark-900/75"
+    class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-md transition-colors dark:border-white/10 dark:bg-dark-900/80"
   >
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-      <!-- 左侧: 站点 logo + 名称 -->
-      <router-link to="/home" class="group flex min-w-0 items-center gap-3">
-        <template v-if="settings">
-          <div
-            class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200/80 bg-white p-1 shadow-sm transition-transform duration-200 group-hover:scale-105 dark:border-white/10 dark:bg-dark-800"
-          >
-            <img :src="siteLogo || '/logo.svg?v=2.1.0'" alt="Logo" class="h-full w-full object-contain" />
-          </div>
-          <div class="flex flex-col">
-            <span class="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white">
-              {{ siteName }}
-            </span>
-            <span class="text-[10px] font-mono tracking-widest uppercase text-cyan-500 font-semibold">AGENT CLIENT</span>
-          </div>
-        </template>
-        <template v-else>
-          <span class="h-9 w-9 shrink-0 animate-pulse rounded-xl bg-gray-200 dark:bg-dark-700" aria-hidden="true"></span>
-          <span class="h-5 w-24 animate-pulse rounded bg-gray-200 dark:bg-dark-700" aria-hidden="true"></span>
-        </template>
+      <!-- 左侧: 魔丸 Logo + 名称 + 版本徽章 -->
+      <router-link to="/download" class="group flex min-w-0 items-center gap-3">
+        <img
+          src="/logo.svg?v=2.1.0"
+          alt="Logo"
+          class="h-9 w-9 shrink-0 object-contain drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
+        />
+        <div class="flex items-center gap-2">
+          <span class="truncate text-lg font-black tracking-tight text-slate-950 dark:text-white">
+            {{ siteName }}
+          </span>
+          <span class="rounded-full border border-orange-200 bg-orange-100 px-2 py-0.5 text-[11px] font-bold text-orange-700 dark:border-orange-500/30 dark:bg-orange-950/50 dark:text-orange-300">
+            v2.1.0 官方版
+          </span>
+        </div>
       </router-link>
 
-      <!-- 中间快速链接 (桌面端) -->
-      <nav class="hidden md:flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-dark-300">
-        <router-link
-          to="/home"
-          class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
-        >
-          {{ t('nav.home') || '首页门户' }}
-        </router-link>
-        <router-link
-          to="/model-plaza"
-          class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
-        >
-          {{ t('nav.modelPlaza') || '模型广场' }}
-        </router-link>
-        <router-link
-          to="/key-usage"
-          class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
-        >
-          {{ t('keyUsage.title') || 'API Key 用量查询' }}
-        </router-link>
+      <!-- 中间快速锚点导航 (桌面端) -->
+      <nav class="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-600 dark:text-dark-300">
         <a
-          v-if="docUrl"
-          :href="docUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
+          href="#models"
+          class="text-indigo-600 transition hover:text-orange-600 dark:text-indigo-400 dark:hover:text-orange-400"
         >
-          {{ t('home.viewDocs') || '开发文档' }}
+          全模型矩阵·专精Gemini
+        </a>
+        <a
+          href="#lay-flat"
+          class="transition hover:text-orange-600 dark:hover:text-orange-400"
+        >
+          手机躺平操控
+        </a>
+        <a
+          href="#hardcore-proof"
+          class="transition hover:text-orange-600 dark:hover:text-orange-400"
+        >
+          长任务实测
+        </a>
+        <a
+          href="#tour"
+          class="transition hover:text-orange-600 dark:hover:text-orange-400"
+        >
+          功能全景
+        </a>
+        <a
+          href="#guide"
+          class="transition hover:text-orange-600 dark:hover:text-orange-400"
+        >
+          上手指南
         </a>
       </nav>
 
-      <!-- 右侧: 主题切换与登录状态 -->
-      <div class="flex items-center gap-2.5">
+      <!-- 右侧: 主题切换 + 登录/控制台 + 免费下载主按钮 -->
+      <div class="flex items-center gap-3">
         <!-- 主题切换 -->
         <button
           type="button"
-          class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200/80 bg-white/60 text-gray-500 shadow-sm transition hover:bg-gray-100 dark:border-white/10 dark:bg-dark-800/60 dark:text-dark-300 dark:hover:bg-dark-700"
-          :title="isDark ? t('home.switchToLight') : t('home.switchToDark')"
+          class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-100 dark:border-white/10 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
+          :title="isDark ? '切换至亮色模式' : '切换至暗色模式'"
           @click="toggleTheme"
         >
           <Icon :name="isDark ? 'sun' : 'moon'" size="xs" />
@@ -70,7 +69,7 @@
         <router-link
           v-if="isAuthenticated"
           :to="backTarget"
-          class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-primary-500/20 transition-all duration-200 hover:from-primary-500 hover:to-indigo-500 hover:shadow-lg hover:shadow-primary-500/30 active:scale-[0.98]"
+          class="hidden sm:inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-white/10 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700"
         >
           <Icon name="arrowLeft" size="xs" />
           <span>{{ t('agentDownload.nav.backToDashboard') }}</span>
@@ -78,13 +77,17 @@
         <router-link
           v-else
           :to="{ path: '/login', query: { redirect: '/download' } }"
-          class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-primary-500/20 transition-all duration-200 hover:from-primary-500 hover:to-indigo-500 hover:shadow-lg hover:shadow-primary-500/30 active:scale-[0.98]"
+          class="hidden sm:inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-white/10 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700"
         >
           <span>{{ t('agentDownload.nav.login') }}</span>
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
         </router-link>
+
+        <a
+          href="#download-section"
+          class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-600 via-amber-600 to-rose-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-orange-500/20 transition hover:opacity-95 active:scale-[0.98]"
+        >
+          <span>免费下载</span>
+        </a>
       </div>
     </div>
   </header>
@@ -94,7 +97,6 @@
 import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/icons/Icon.vue'
-import { sanitizeUrl } from '@/utils/url'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
 
@@ -103,9 +105,7 @@ const appStore = useAppStore()
 const authStore = useAuthStore()
 
 const settings = computed(() => appStore.cachedPublicSettings)
-const siteName = computed(() => settings.value?.site_name || '英国api.cc')
-const siteLogo = computed(() => sanitizeUrl(settings.value?.site_logo || ''))
-const docUrl = computed(() => appStore.docUrl)
+const siteName = computed(() => (settings.value?.site_name ? `魔丸 Agent (${settings.value.site_name})` : '魔丸 Agent'))
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const backTarget = computed(() => (authStore.isAdmin ? '/admin/dashboard' : '/dashboard'))
 

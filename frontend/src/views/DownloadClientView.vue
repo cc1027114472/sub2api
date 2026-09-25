@@ -6,20 +6,21 @@
     </div>
   </AppLayout>
 
-  <!-- 独立全屏形态: 自带导航条（Logo/站名 + 登录/返回后台）与 Linear 极客精细网格质感 -->
+  <!-- 独立全屏落地页形态: 带有专属网格背景、顶部导航条、全景内容与页脚 -->
   <div
     v-else
-    class="relative min-h-screen overflow-x-hidden bg-[#fafafa] text-gray-900 antialiased selection:bg-primary-500/20 selection:text-primary-900 dark:bg-[#06090e] dark:text-gray-100 dark:selection:text-primary-200"
+    class="relative min-h-screen overflow-x-hidden bg-[#f8fafc] text-slate-900 antialiased selection:bg-orange-500 selection:text-white dark:bg-[#06090e] dark:text-gray-100"
   >
-    <!-- Background: 精致网格与微光光晕 -->
+    <!-- Background: 精致点状网格与微光光晕 -->
     <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <!-- 顶部中央微光光晕 -->
       <div
-        class="absolute -top-[300px] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-b from-primary-500/15 via-cyan-500/10 to-transparent blur-[120px] dark:from-primary-600/20 dark:via-cyan-600/10"
+        class="absolute -top-[250px] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-b from-orange-500/10 via-pink-500/5 to-transparent blur-[120px] dark:from-orange-600/15 dark:via-purple-600/10"
       ></div>
+      <!-- Radial Dot Grid Pattern -->
       <div
-        class="absolute inset-0 bg-[linear-gradient(to_right,rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_100%)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)]"
+        class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1.2px,transparent_1.2px)] [background-size:24px_24px] dark:bg-[radial-gradient(#334155_1.2px,transparent_1.2px)]"
       ></div>
-      <div class="absolute left-0 right-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary-500/40 to-transparent"></div>
     </div>
 
     <!-- 顶部导航 -->
@@ -32,9 +33,17 @@
       <AgentDownloadContent />
     </main>
 
-    <!-- 极简页脚 -->
-    <footer class="relative z-10 border-t border-gray-200/60 py-6 text-center text-xs text-gray-500 dark:border-white/5 dark:text-dark-500">
-      &copy; {{ new Date().getFullYear() }} {{ appStore.siteName }}. All rights reserved.
+    <!-- 品牌页脚 -->
+    <footer class="relative z-10 border-t border-slate-200/80 dark:border-white/10 py-10 text-center text-xs text-slate-500 dark:text-dark-400 bg-white/50 dark:bg-dark-900/50 backdrop-blur-sm mt-16">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <img src="/logo.svg?v=2.1.0" alt="Logo" class="w-5 h-5 object-contain" />
+          <span class="font-bold text-slate-700 dark:text-slate-300">{{ appStore.siteName }} · 魔丸 Agent 官方专属客户端</span>
+        </div>
+        <div>
+          &copy; {{ new Date().getFullYear() }} {{ appStore.siteName }}. 别在工位当牛马，你在床上躺平，它在后台杀穿。
+        </div>
+      </div>
     </footer>
   </div>
 </template>
