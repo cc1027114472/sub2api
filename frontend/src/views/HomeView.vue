@@ -236,15 +236,15 @@
 
             <!-- Big Impact Title -->
             <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl dark:text-white">
-              <span class="block">{{ t('home.hero.title1') || '极速聚合' }}</span>
+              <span class="block">聚合全球顶尖算力</span>
               <span class="mt-1 block bg-gradient-to-r from-primary-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent dark:from-primary-400 dark:via-indigo-300 dark:to-cyan-300">
-                {{ t('home.hero.title2') || '多模型 API 网关中枢' }}
+                {{ t('home.heroSubtitle') || '一个密钥，畅用全系 AI' }}
               </span>
             </h1>
 
             <!-- Subtitle -->
             <p class="mt-5 max-w-xl text-base leading-relaxed text-gray-600 dark:text-dark-300 sm:text-lg">
-              {{ siteSubtitle || t('home.hero.subtitle') || '统一调度 Claude、OpenAI、Gemini、Grok 与国产顶尖模型。原生赋能 Claude Code、Codex CLI 等开发工具，具备毫秒级会话粘性与精确 Token 计费。' }}
+              {{ siteSubtitle || t('home.heroDescription') || '无需分别订阅，一站式原生接入 Claude Code、Codex CLI、OpenAI、Gemini 与 DeepSeek 等模型，毫秒级粘性调度与实时精确计费。' }}
             </p>
 
             <!-- Actions Row -->
@@ -253,7 +253,7 @@
                 :to="isAuthenticated ? dashboardPath : '/register'"
                 class="group relative inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition-all duration-200 hover:from-primary-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-primary-500/35 active:scale-[0.98]"
               >
-                <span>{{ isAuthenticated ? t('home.goToDashboard') : (t('home.hero.getStarted') || '免费获取 API Key') }}</span>
+                <span>{{ isAuthenticated ? t('home.goToDashboard') : (t('home.getStarted') || '免费获取 API Key') }}</span>
                 <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
@@ -282,7 +282,7 @@
             <div class="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-gray-500 dark:text-dark-400 lg:justify-start">
               <div class="flex items-center gap-1.5">
                 <Icon name="checkCircle" size="xs" class="text-emerald-500" />
-                <span>{{ t('home.tags.multiProtocol') || '全协议原生兼容' }}</span>
+                <span>{{ t('home.tags.subscriptionToApi') || '订阅转 API' }}</span>
               </div>
               <span class="text-gray-300 dark:text-dark-600">·</span>
               <div class="flex items-center gap-1.5">
@@ -469,12 +469,12 @@
                   <Icon name="bolt" size="md" />
                 </div>
                 <div>
-                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ t('home.features.smartScheduling') || '智能会话粘性调度' }}</h3>
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ te('home.features.smartScheduling') ? t('home.features.smartScheduling') : '智能会话粘性调度' }}</h3>
                   <p class="text-xs text-gray-500 dark:text-dark-400">SESSION AFFINITY & FAILOVER</p>
                 </div>
               </div>
               <p class="mt-4 text-sm leading-relaxed text-gray-600 dark:text-dark-300">
-                {{ t('home.features.smartSchedulingDesc') || '针对 Claude Code 与 Codex 的多轮长上下文会话，自动建立会话与物理上游账号的粘性绑定，避免请求在账号间频繁漂移导致上下文丢失。单账号故障时 0 毫秒感知秒级迁移。' }}
+                {{ te('home.features.smartSchedulingDesc') ? t('home.features.smartSchedulingDesc') : '针对 Claude Code 与 Codex 的多轮长上下文会话，自动建立会话与物理上游账号的粘性绑定，避免请求在账号间频繁漂移导致上下文丢失。单账号故障时 0 毫秒感知秒级迁移。' }}
               </p>
               <!-- Mini Visual Simulation -->
               <div class="mt-6 flex flex-wrap items-center gap-2 rounded-xl bg-gray-50 p-3 font-mono text-xs dark:bg-dark-950/60">
@@ -492,12 +492,12 @@
                   <Icon name="chart" size="md" />
                 </div>
                 <div>
-                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ t('home.features.billingQuota') || 'Token 级精准扣费' }}</h3>
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ te('home.features.billingQuota') ? t('home.features.billingQuota') : 'Token 级精准扣费' }}</h3>
                   <p class="text-xs text-gray-500 dark:text-dark-400">REAL-TIME METERING</p>
                 </div>
               </div>
               <p class="mt-4 text-sm leading-relaxed text-gray-600 dark:text-dark-300">
-                {{ t('home.features.billingQuotaDesc') || '支持按 Token 费率精准计费，Prompt 缓存命中折扣、输入输出分级单价、图片/视频生成差异计费一应俱全。' }}
+                {{ te('home.features.billingQuotaDesc') ? t('home.features.billingQuotaDesc') : '支持按 Token 费率精准计费，Prompt 缓存命中折扣、输入输出分级单价、图片/视频生成差异计费一应俱全。' }}
               </p>
               <div class="mt-5 flex items-center justify-between border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-white/5 dark:text-dark-400">
                 <span>Prompt Cache 节省</span>
@@ -512,12 +512,12 @@
                   <Icon name="server" size="md" />
                 </div>
                 <div>
-                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ t('home.features.multiAccount') || '多账号池弹性负载' }}</h3>
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ te('home.features.multiAccount') ? t('home.features.multiAccount') : '多账号池弹性负载' }}</h3>
                   <p class="text-xs text-gray-500 dark:text-dark-400">LOAD BALANCING</p>
                 </div>
               </div>
               <p class="mt-4 text-sm leading-relaxed text-gray-600 dark:text-dark-300">
-                {{ t('home.features.multiAccountDesc') || '支持 OAuth 账号、API Key 混合池管理，定时探活与自动限流保护，避免突发高频请求打爆单账号。' }}
+                {{ te('home.features.multiAccountDesc') ? t('home.features.multiAccountDesc') : '支持 OAuth 账号、API Key 混合池管理，定时探活与自动限流保护，避免突发高频请求打爆单账号。' }}
               </p>
             </div>
 
@@ -528,7 +528,7 @@
                   <Icon name="cog" size="md" />
                 </div>
                 <div>
-                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ t('home.features.concurrencyControl') || 'IDE 深度适配支持' }}</h3>
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ te('home.features.concurrencyControl') ? t('home.features.concurrencyControl') : 'IDE 深度适配支持' }}</h3>
                   <p class="text-xs text-gray-500 dark:text-dark-400">CODEX & CLAUDE CODE</p>
                 </div>
               </div>
@@ -544,7 +544,7 @@
                   <Icon name="creditCard" size="md" />
                 </div>
                 <div>
-                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ t('home.features.securityStability') || '内置多支付与卡密' }}</h3>
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white">{{ te('home.features.securityStability') ? t('home.features.securityStability') : '内置多支付与卡密' }}</h3>
                   <p class="text-xs text-gray-500 dark:text-dark-400">PAYMENT & REDEEM</p>
                 </div>
               </div>
@@ -573,7 +573,7 @@
                 :to="isAuthenticated ? dashboardPath : '/register'"
                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-7 py-3 text-sm font-bold text-gray-950 shadow-lg transition-all hover:bg-gray-100 sm:w-auto"
               >
-                <span>{{ isAuthenticated ? t('home.dashboard') : (t('home.hero.getStarted') || '免费注册使用') }}</span>
+                <span>{{ isAuthenticated ? t('home.dashboard') : (te('home.getStarted') ? t('home.getStarted') : '免费注册使用') }}</span>
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
@@ -636,7 +636,7 @@ import { useAppStore, useAuthStore } from '@/stores'
 import Icon from '@/components/icons/Icon.vue'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 
