@@ -690,7 +690,7 @@ export default {
     tour: {
       badge: '图文全景体验',
       title: '客户端功能预览与上手指南',
-      subtitle: '探索魔丸 (mowan-harness) 的强大能力：从一键极速接入到深度自主编程。',
+      subtitle: '探索魔丸 (mowan-harness) 的强大能力：从一键极速接入、手机躺平遥控，到数小时长任务自主杀穿。',
       clickToEnlarge: '点击查看高清大图',
       step1: {
         badge: '工作台体验',
@@ -716,6 +716,24 @@ export default {
         feature1: '高质量全量代码生成，语法结构严谨',
         feature2: '首 Token 延迟与吞吐速率实时可见',
         feature3: '深度缓存监控，大幅节省算力开销'
+      },
+      step4: {
+        badge: '真·躺平操控',
+        title: '别在工位当牛马了：手机扫码秒连 + 免费内网穿透',
+        quote: '“还在手动配端口、搞反代？有些工具扫个码就能躺在床上用，别在无意义的事上死磕感动自己。”',
+        desc: '电脑端一键开启，智能识别物理网卡。在家连同一 Wi-Fi 手机相机扫码免密直连；出门在外一键开启原生 Cloudflare 免费内网穿透。专为手机单手调优的极简界面，躺在床上、沙发上或咖啡厅里单手掌控全场。',
+        feature1: '局域网扫码免密秒进，连密码都不用手打',
+        feature2: '内置免费加密公网穿透，无需公网 IP 与域名',
+        feature3: '纯净移动端专属交互，单手丝滑下发工程指令'
+      },
+      step5: {
+        badge: '绝对统治力',
+        title: '连续狂飙几小时绝不降智，数千步长任务完整闭环',
+        quote: '“天天端坐在电脑前盯进度条，不是因为你敬业，而是你用的玩具 Agent 根本不配让你安心去睡大觉。”',
+        desc: '拒绝聊十几轮就失忆摆烂的娇气花瓶。实测单次任务连续运行 400+ 分钟、49 轮、2094 步工具调度绝不偏航；手机端下发长任务 13 轮 319 步自主改代码、跑通 8 项测试与门禁、自动 Commit 并 Push 分支！',
+        feature1: '实测 49 轮 · 2094 步超长链路零偏航、不降智',
+        feature2: '越到后期逻辑越严密，死咬目标直到测试全绿',
+        feature3: '自动跑测试、过代码门禁、自动提交推送全闭环'
       }
     },
     features: {
@@ -724,8 +742,8 @@ export default {
       loopDesc: '原生支持 Ralph 深度任务循环与子智能体集群协同，告别单轮对话，自主推理并完成复杂开发目标。',
       sandboxTitle: '本地安全沙箱',
       sandboxDesc: '内置安全的 PowerShell 终端执行、文件读写、网页抓取与代码运行能力，在受控环境中高效交付。',
-      modelsTitle: '本站模型极速直连',
-      modelsDesc: '无缝对接本站 Antigravity、Gemini、DeepSeek 等高并发优质渠道与倍率，低延迟极速响应。',
+      modelsTitle: '全明星模型完美适配 · 深度专精 Gemini 旗舰',
+      modelsDesc: '原生完美适配 ChatGPT、Claude、Grok、DeepSeek、GLM、Kimi；更对 Google Gemini 实行百万上下文与协议级缓存特调，连续狂飙不降智。',
       memoryTitle: '跨会话状态持久化',
       memoryDesc: '拥有任务进度持久化记忆，支持断点恢复、长上下文工程规划与多轮会话自愈。',
     },

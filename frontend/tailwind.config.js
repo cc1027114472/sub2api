@@ -5,19 +5,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        // 主色调 - Teal/Cyan 青色系
+        // 主色调 - 电光靛蓝 (Electric Indigo) & 极光青 (Aurora Cyan)
         primary: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-          950: '#042f2e'
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b'
+        },
+        // 极光高光青色 (Cyan Accent)
+        cyan: {
+          50: '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',
+          500: '#06b6d4',
+          600: '#0891b2',
+          700: '#0e7490',
+          800: '#155e75',
+          900: '#164e63',
+          950: '#083344'
         },
         // 辅助色 - 深蓝灰
         accent: {
@@ -33,7 +47,7 @@ export default {
           900: '#0f172a',
           950: '#020617'
         },
-        // 深色模式背景
+        // 深色模式背景 - 极客纯黑与深石板阶梯
         dark: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -44,8 +58,9 @@ export default {
           600: '#475569',
           700: '#334155',
           800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617'
+          850: '#141c2e',
+          900: '#0b101b',
+          950: '#06090e'
         }
       },
       fontFamily: {
@@ -67,20 +82,23 @@ export default {
       boxShadow: {
         glass: '0 8px 32px rgba(0, 0, 0, 0.08)',
         'glass-sm': '0 4px 16px rgba(0, 0, 0, 0.06)',
-        glow: '0 0 20px rgba(20, 184, 166, 0.25)',
-        'glow-lg': '0 0 40px rgba(20, 184, 166, 0.35)',
+        glow: '0 0 24px rgba(99, 102, 241, 0.25)',
+        'glow-cyan': '0 0 24px rgba(6, 182, 212, 0.25)',
+        'glow-lg': '0 0 48px rgba(99, 102, 241, 0.35)',
         card: '0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 10px 40px rgba(0, 0, 0, 0.08)',
-        'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+        'card-hover': '0 12px 36px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(99, 102, 241, 0.08)',
+        'bento': '0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 40px -15px rgba(0, 0, 0, 0.3)',
+        'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.12)'
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-primary': 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+        'gradient-primary': 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+        'gradient-aurora': 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
         'gradient-dark': 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
         'gradient-glass':
           'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
         'mesh-gradient':
-          'radial-gradient(at 40% 20%, rgba(20, 184, 166, 0.12) 0px, transparent 50%), radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.08) 0px, transparent 50%), radial-gradient(at 0% 50%, rgba(20, 184, 166, 0.08) 0px, transparent 50%)'
+          'radial-gradient(at 20% 15%, rgba(99, 102, 241, 0.15) 0px, transparent 45%), radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.12) 0px, transparent 50%), radial-gradient(at 50% 60%, rgba(99, 102, 241, 0.08) 0px, transparent 55%)'
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

@@ -710,6 +710,24 @@ export default {
         feature1: 'Production-ready code with complete structure',
         feature2: 'Real-time first-token delay and token throughput',
         feature3: 'Deep context cache monitoring for maximum efficiency'
+      },
+      step4: {
+        badge: 'Mobile Lay-flat Control',
+        title: 'Bedside Remote: QR Scan Instant Connect & Free Tunnel',
+        quote: '"Control from bed while it conquers everything in the background."',
+        desc: 'One click to start on PC. Scan the QR code on the same Wi-Fi with your phone camera for zero-password instant entry. Built-in free Cloudflare tunnel lets you trigger and control complex pipelines anywhere on the go.',
+        feature1: 'LAN zero-password QR scan direct login',
+        feature2: 'Built-in free encrypted Cloudflare public tunnel',
+        feature3: 'Pure mobile-optimized interface for one-handed operation'
+      },
+      step5: {
+        badge: 'Long-running Stability',
+        title: 'Multi-hour High-speed Runs with Zero Mental Drift',
+        quote: '"Real agents let you sleep peacefully without babysitting."',
+        desc: 'Field tested for over 400 minutes, 49 rounds, and 2094 steps without drifting or losing context. Mobile dispatched tasks execute 13 rounds and 319 steps, pass 8 tests, pass code quality gates, and commit & push automatically.',
+        feature1: 'Tested 49 rounds & 2094 steps with zero hallucinations',
+        feature2: 'Sharper logic in late phases, locking onto target till all tests pass',
+        feature3: 'Full closed loop: automated testing, gate checks, commit and push'
       }
     },
     features: {
@@ -718,8 +736,8 @@ export default {
       loopDesc: 'Native support for deep Ralph loops and subagent team coordination to reason and execute complex goals.',
       sandboxTitle: 'Local Security Sandbox',
       sandboxDesc: 'Safe PowerShell command execution, file operations, web browsing, and code runners within controlled boundaries.',
-      modelsTitle: 'Direct Low-Latency Model Access',
-      modelsDesc: 'Directly linked to Antigravity, Gemini, DeepSeek, and high-performance channels on this platform.',
+      modelsTitle: 'All-Star Model Matrix & Deep Gemini Optimization',
+      modelsDesc: 'Native compatibility with ChatGPT, Claude, Grok, DeepSeek, GLM, and Kimi, with specialized million-context and caching tuning for Google Gemini flagship models.',
       memoryTitle: 'Cross-Session State Persistence',
       memoryDesc: 'Persisted memory and goal tracking across sessions with resumption and self-healing execution.',
     },

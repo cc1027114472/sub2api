@@ -220,6 +220,172 @@
           </div>
         </div>
       </div>
+
+      <!-- Step 4: 真·躺平操控：手机扫码秒连与免费内网穿透 (左图右文) -->
+      <div class="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+        <div class="order-2 lg:order-1 lg:col-span-7">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <!-- 电脑端扫码弹窗 -->
+            <div
+              class="group relative cursor-zoom-in overflow-hidden rounded-2xl border border-gray-200/80 bg-gray-900 p-2 shadow-xl shadow-orange-500/5 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10 dark:border-dark-700"
+              @click="openLightbox('/assets/agent/guide/scan-qrcode.png', t('agentDownload.tour.step4.feature1'))"
+            >
+              <div class="mb-2 flex items-center gap-1.5 px-2 pt-1">
+                <div class="h-2.5 w-2.5 rounded-full bg-red-400/80"></div>
+                <div class="h-2.5 w-2.5 rounded-full bg-yellow-400/80"></div>
+                <div class="h-2.5 w-2.5 rounded-full bg-green-400/80"></div>
+                <span class="ml-2 text-[10px] font-mono text-gray-400">LAN QR-Code Connect</span>
+              </div>
+              <div class="overflow-hidden rounded-xl bg-white dark:bg-dark-950">
+                <img
+                  src="/assets/agent/guide/scan-qrcode.png"
+                  alt="扫码免密登录"
+                  class="w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-2 text-center text-[10px] font-bold text-gray-300">
+                ▲ 手机自带相机扫码免密秒登
+              </div>
+            </div>
+
+            <!-- 手机端极简对话界面 -->
+            <div
+              class="group relative cursor-zoom-in overflow-hidden rounded-2xl border border-gray-200/80 bg-gray-900 p-2 shadow-xl shadow-orange-500/5 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10 dark:border-dark-700"
+              @click="openLightbox('/assets/agent/guide/mobile-chat.png', t('agentDownload.tour.step4.feature3'))"
+            >
+              <div class="mb-2 flex items-center gap-1.5 px-2 pt-1">
+                <div class="h-2.5 w-2.5 rounded-full bg-red-400/80"></div>
+                <div class="h-2.5 w-2.5 rounded-full bg-yellow-400/80"></div>
+                <div class="h-2.5 w-2.5 rounded-full bg-green-400/80"></div>
+                <span class="ml-2 text-[10px] font-mono text-gray-400">Mobile Lay-flat UI</span>
+              </div>
+              <div class="overflow-hidden rounded-xl bg-white dark:bg-dark-950">
+                <img
+                  src="/assets/agent/guide/mobile-chat.png"
+                  alt="手机端极简对话"
+                  class="w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  loading="lazy"
+                />
+              </div>
+              <div class="p-2 text-center text-[10px] font-bold text-gray-300">
+                ▲ 躺在床上单手下发大工程
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-1 space-y-5 lg:order-2 lg:col-span-5">
+          <div class="inline-flex items-center gap-2 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700 ring-1 ring-inset ring-orange-600/20 dark:bg-orange-950/40 dark:text-orange-300 dark:ring-orange-400/20">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-orange-600 text-[10px] font-black text-white">04</span>
+            <span>{{ t('agentDownload.tour.step4.badge') }}</span>
+          </div>
+
+          <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+            {{ t('agentDownload.tour.step4.title') }}
+          </h3>
+
+          <div class="rounded-xl border-l-4 border-orange-500 bg-orange-50/50 p-3 text-sm italic font-medium text-orange-950 dark:bg-orange-950/20 dark:text-orange-200">
+            {{ t('agentDownload.tour.step4.quote') }}
+          </div>
+
+          <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-300 sm:text-base">
+            {{ t('agentDownload.tour.step4.desc') }}
+          </p>
+
+          <ul class="space-y-2.5 pt-2 text-sm text-gray-700 dark:text-dark-200">
+            <li class="flex items-center gap-2.5">
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <Icon name="check" size="xs" />
+              </span>
+              <span>{{ t('agentDownload.tour.step4.feature1') }}</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <Icon name="check" size="xs" />
+              </span>
+              <span>{{ t('agentDownload.tour.step4.feature2') }}</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <Icon name="check" size="xs" />
+              </span>
+              <span>{{ t('agentDownload.tour.step4.feature3') }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 5: 变态级持久力：连续狂飙几小时绝不降智 (左文右图) -->
+      <div class="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+        <div class="space-y-5 lg:col-span-5">
+          <div class="inline-flex items-center gap-2 rounded-xl bg-pink-50 px-3 py-1.5 text-xs font-bold text-pink-700 ring-1 ring-inset ring-pink-600/20 dark:bg-pink-950/40 dark:text-pink-300 dark:ring-pink-400/20">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-pink-600 text-[10px] font-black text-white">05</span>
+            <span>{{ t('agentDownload.tour.step5.badge') }}</span>
+          </div>
+
+          <h3 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+            {{ t('agentDownload.tour.step5.title') }}
+          </h3>
+
+          <div class="rounded-xl border-l-4 border-pink-500 bg-pink-50/50 p-3 text-sm italic font-medium text-pink-950 dark:bg-pink-950/20 dark:text-pink-200">
+            {{ t('agentDownload.tour.step5.quote') }}
+          </div>
+
+          <p class="text-sm leading-relaxed text-gray-600 dark:text-dark-300 sm:text-base">
+            {{ t('agentDownload.tour.step5.desc') }}
+          </p>
+
+          <ul class="space-y-2.5 pt-2 text-sm text-gray-700 dark:text-dark-200">
+            <li class="flex items-center gap-2.5">
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <Icon name="check" size="xs" />
+              </span>
+              <span>{{ t('agentDownload.tour.step5.feature1') }}</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <Icon name="check" size="xs" />
+              </span>
+              <span>{{ t('agentDownload.tour.step5.feature2') }}</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                <Icon name="check" size="xs" />
+              </span>
+              <span>{{ t('agentDownload.tour.step5.feature3') }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="lg:col-span-7">
+          <div
+            class="group relative cursor-zoom-in overflow-hidden rounded-2xl border border-gray-200/80 bg-gray-900 p-2 shadow-xl shadow-pink-500/5 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-500/10 dark:border-dark-700"
+            @click="openLightbox('/assets/agent/guide/pc-hardcore-2094steps.png', t('agentDownload.tour.step5.title'))"
+          >
+            <!-- 仿视窗顶栏 -->
+            <div class="mb-2 flex items-center gap-1.5 px-2 pt-1">
+              <div class="h-2.5 w-2.5 rounded-full bg-red-400/80"></div>
+              <div class="h-2.5 w-2.5 rounded-full bg-yellow-400/80"></div>
+              <div class="h-2.5 w-2.5 rounded-full bg-green-400/80"></div>
+              <span class="ml-2 text-[11px] font-mono text-gray-400">400+ Minutes Continuous Hardcore Execution (49 Rounds · 2094 Steps)</span>
+            </div>
+            <div class="overflow-hidden rounded-xl bg-white dark:bg-dark-950">
+              <img
+                src="/assets/agent/guide/pc-hardcore-2094steps.png"
+                :alt="t('agentDownload.tour.step5.title')"
+                class="w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
+                loading="lazy"
+              />
+            </div>
+            <!-- 悬浮提示 -->
+            <div class="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-lg bg-gray-900/80 px-2.5 py-1 text-xs font-medium text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+              <Icon name="search" size="xs" />
+              <span>{{ t('agentDownload.tour.clickToEnlarge') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 高清大图预览弹窗 (Lightbox) -->

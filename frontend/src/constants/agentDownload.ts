@@ -32,19 +32,19 @@ export interface AgentDownloadConfig {
 }
 
 export const defaultAgentDownloadConfig: AgentDownloadConfig = {
-  version: 'v2.0.2',
+  version: 'v2.0.3',
   releaseDate: '2026-09-25',
   windows: {
     installerUrl: '/downloads/Mowan-Agent-Setup-latest.exe',
     portableUrl: '/downloads/Mowan-Agent-Setup-latest.exe',
-    size: '172.9 MB',
+    size: '174.4 MB',
     releaseDate: '2026-09-25',
-    sha256: 'e5f7052113f83ede81f0b02f77e4c1ee6bf41875c6537c3ae39a4e806a1fe0a6',
+    sha256: '115a90f374c323e2dfec10d036ea755feea511ca36adca9fb77b3c7e9698ee1c',
   },
   mac: {
     armUrl: '',
     intelUrl: '',
-    size: '172.9 MB',
+    size: '174.4 MB',
     status: 'coming_soon',
   },
   linux: {
@@ -87,4 +87,5 @@ export function resolvePlatformDownload(userAgent: string = ''): ResolvedPlatfor
     platformLabel,
   }
 }
+
 

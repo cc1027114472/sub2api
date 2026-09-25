@@ -298,33 +298,7 @@
       </div>
 
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <!-- Feature 1 -->
-        <div class="rounded-2xl border border-gray-200/70 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-dark-800 dark:bg-dark-900">
-          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-100 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400">
-            <Icon name="sync" size="sm" />
-          </div>
-          <h3 class="mt-4 text-base font-bold text-gray-900 dark:text-white">
-            {{ t('agentDownload.features.loopTitle') }}
-          </h3>
-          <p class="mt-2 text-xs leading-relaxed text-gray-500 dark:text-dark-400">
-            {{ t('agentDownload.features.loopDesc') }}
-          </p>
-        </div>
-
-        <!-- Feature 2 -->
-        <div class="rounded-2xl border border-gray-200/70 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-dark-800 dark:bg-dark-900">
-          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-            <Icon name="shield" size="sm" />
-          </div>
-          <h3 class="mt-4 text-base font-bold text-gray-900 dark:text-white">
-            {{ t('agentDownload.features.sandboxTitle') }}
-          </h3>
-          <p class="mt-2 text-xs leading-relaxed text-gray-500 dark:text-dark-400">
-            {{ t('agentDownload.features.sandboxDesc') }}
-          </p>
-        </div>
-
-        <!-- Feature 3 -->
+        <!-- Feature 1: 全明星模型与 Gemini 旗舰深度调优 -->
         <div class="rounded-2xl border border-gray-200/70 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-dark-800 dark:bg-dark-900">
           <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
             <Icon name="bolt" size="sm" />
@@ -337,7 +311,33 @@
           </p>
         </div>
 
-        <!-- Feature 4 -->
+        <!-- Feature 2: 自愈 Ralph 循环 -->
+        <div class="rounded-2xl border border-gray-200/70 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-dark-800 dark:bg-dark-900">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-100 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400">
+            <Icon name="sync" size="sm" />
+          </div>
+          <h3 class="mt-4 text-base font-bold text-gray-900 dark:text-white">
+            {{ t('agentDownload.features.loopTitle') }}
+          </h3>
+          <p class="mt-2 text-xs leading-relaxed text-gray-500 dark:text-dark-400">
+            {{ t('agentDownload.features.loopDesc') }}
+          </p>
+        </div>
+
+        <!-- Feature 3: 安全沙箱与门禁 -->
+        <div class="rounded-2xl border border-gray-200/70 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-dark-800 dark:bg-dark-900">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+            <Icon name="shield" size="sm" />
+          </div>
+          <h3 class="mt-4 text-base font-bold text-gray-900 dark:text-white">
+            {{ t('agentDownload.features.sandboxTitle') }}
+          </h3>
+          <p class="mt-2 text-xs leading-relaxed text-gray-500 dark:text-dark-400">
+            {{ t('agentDownload.features.sandboxDesc') }}
+          </p>
+        </div>
+
+        <!-- Feature 4: 跨会话状态持久化 -->
         <div class="rounded-2xl border border-gray-200/70 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-dark-800 dark:bg-dark-900">
           <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
             <Icon name="database" size="sm" />
