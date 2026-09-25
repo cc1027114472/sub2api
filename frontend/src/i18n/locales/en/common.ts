@@ -164,6 +164,7 @@ export default {
   // Navigation
   nav: {
     home: 'Home',
+    login: 'Sign In',
     dashboard: 'Dashboard',
     announcements: 'Announcements',
     apiKeys: 'API Keys',

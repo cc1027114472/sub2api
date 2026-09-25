@@ -1,53 +1,103 @@
 <template>
-  <div class="relative flex min-h-screen flex-col bg-gray-50 dark:bg-dark-950">
-    <!-- Header (same pattern as HomeView) -->
-    <header class="relative z-20 px-6 py-4">
-      <nav class="mx-auto flex max-w-6xl items-center justify-between">
-        <router-link to="/home" class="flex items-center gap-3">
-          <div class="h-10 w-10 overflow-hidden rounded-xl shadow-md">
+  <div
+    class="relative min-h-screen overflow-x-hidden bg-[#fafafa] text-gray-900 antialiased selection:bg-primary-500/20 selection:text-primary-900 dark:bg-[#06090e] dark:text-gray-100 dark:selection:text-primary-200"
+  >
+    <!-- Background: 精致网格与微光光晕 -->
+    <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div
+        class="absolute -top-[300px] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-b from-primary-500/15 via-cyan-500/10 to-transparent blur-[120px] dark:from-primary-600/20 dark:via-cyan-600/10"
+      ></div>
+      <div
+        class="absolute inset-0 bg-[linear-gradient(to_right,rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_100%)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)]"
+      ></div>
+      <div class="absolute left-0 right-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary-500/40 to-transparent"></div>
+    </div>
+
+    <!-- Header (统一精致毛玻璃导航条) -->
+    <header class="sticky top-0 z-30 border-b border-gray-200/80 bg-white/75 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-dark-900/75">
+      <nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <router-link to="/home" class="group flex min-w-0 items-center gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200/80 bg-white p-1 shadow-sm transition-transform duration-200 group-hover:scale-105 dark:border-white/10 dark:bg-dark-800">
             <img :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
           </div>
-          <span class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">{{ siteName }}</span>
+          <div class="flex flex-col">
+            <span class="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white">{{ siteName }}</span>
+            <span class="text-[10px] font-mono tracking-widest uppercase text-cyan-500 font-semibold">KEY USAGE</span>
+          </div>
         </router-link>
-        <div class="flex items-center gap-3">
-          <LocaleSwitcher />
+
+        <!-- 中间快速链接 (桌面端) -->
+        <div class="hidden md:flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-dark-300">
+          <router-link
+            to="/home"
+            class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
+          >
+            {{ t('nav.home') || '首页门户' }}
+          </router-link>
+          <router-link
+            to="/model-plaza"
+            class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
+          >
+            {{ t('nav.modelPlaza') || '模型广场' }}
+          </router-link>
+          <router-link
+            to="/download"
+            class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
+          >
+            {{ t('nav.agentDownload') || '客户端下载' }}
+          </router-link>
           <a
             v-if="docUrl"
             :href="docUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-white"
-            :title="t('home.viewDocs')"
+            class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
           >
-            <Icon name="book" size="md" />
+            {{ t('home.viewDocs') || '开发文档' }}
           </a>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <LocaleSwitcher />
           <button
             @click="toggleTheme"
-            class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-white"
+            class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200/80 bg-white/60 text-gray-500 shadow-sm transition hover:bg-gray-100 dark:border-white/10 dark:bg-dark-800/60 dark:text-dark-300 dark:hover:bg-dark-700"
             :title="isDark ? t('home.switchToLight') : t('home.switchToDark')"
           >
-            <Icon v-if="isDark" name="sun" size="md" />
-            <Icon v-else name="moon" size="md" />
+            <Icon :name="isDark ? 'sun' : 'moon'" size="xs" />
           </button>
+          <router-link
+            to="/login"
+            class="hidden sm:inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-primary-500/20 transition-all duration-200 hover:from-primary-500 hover:to-indigo-500 hover:shadow-lg hover:shadow-primary-500/30 active:scale-[0.98]"
+          >
+            <span>{{ t('nav.login') || '登录系统' }}</span>
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </router-link>
         </div>
       </nav>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 w-full max-w-5xl mx-auto px-6 py-12">
+    <main class="relative z-10 flex-1 w-full max-w-5xl mx-auto px-6 py-12">
       <!-- Hero -->
-      <div class="text-center mb-12">
-        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">
+      <div class="text-center mb-10">
+        <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-primary-500/20 bg-primary-500/5 px-3 py-1 text-xs font-medium text-primary-700 dark:border-primary-400/20 dark:bg-primary-400/10 dark:text-primary-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+          <span>REALTIME KEY TELEMETRY</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3 text-gray-900 dark:text-white">
           {{ t('keyUsage.title') }}
         </h1>
-        <p class="text-gray-500 dark:text-dark-400 text-base max-w-md mx-auto">
+        <p class="text-gray-500 dark:text-dark-400 text-sm sm:text-base max-w-md mx-auto">
           {{ t('keyUsage.subtitle') }}
         </p>
       </div>
 
       <!-- Input Section -->
-      <div class="max-w-xl mx-auto mb-14">
-        <div class="flex gap-3">
+      <div class="max-w-2xl mx-auto mb-14 rounded-2xl border border-gray-200/80 bg-white/75 p-5 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-dark-900/70">
+        <div class="flex flex-col sm:flex-row gap-3">
           <div class="flex-1 relative">
             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-500">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -58,7 +108,7 @@
               v-model="apiKey"
               :type="keyVisible ? 'text' : 'password'"
               :placeholder="t('keyUsage.placeholder')"
-              class="input-ring w-full h-12 pl-12 pr-12 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 transition-all dark:border-dark-700 dark:bg-dark-900 dark:text-white dark:placeholder:text-dark-500"
+              class="input-ring w-full h-12 pl-12 pr-12 rounded-xl border border-gray-200 bg-white font-mono text-sm text-gray-900 placeholder:font-sans placeholder:text-gray-400 transition-all dark:border-white/10 dark:bg-dark-800/80 dark:text-white dark:placeholder:text-dark-500"
               @keydown.enter="queryKey"
             />
             <button
@@ -77,7 +127,7 @@
           <button
             @click="queryKey"
             :disabled="isQuerying"
-            class="h-12 px-7 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-medium text-sm transition-all active:scale-[0.97] flex items-center gap-2 whitespace-nowrap disabled:opacity-60"
+            class="h-12 px-7 rounded-xl bg-gradient-to-r from-primary-600 via-indigo-600 to-cyan-500 hover:from-primary-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-md shadow-primary-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-60"
           >
             <svg v-if="isQuerying" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.25"/>
@@ -522,10 +572,10 @@ function setDailyUsageDays(days: 7 | 30 | 90) {
 
 const CIRCUMFERENCE = 2 * Math.PI * 68
 const RING_GRADIENTS = [
-  { from: '#14b8a6', to: '#5eead4' },
-  { from: '#6366F1', to: '#A5B4FC' },
-  { from: '#10B981', to: '#6EE7B7' },
-  { from: '#F59E0B', to: '#FCD34D' },
+  { from: '#06b6d4', to: '#67e8f9' }, // Aurora Cyan
+  { from: '#6366f1', to: '#a5b4fc' }, // Electric Indigo
+  { from: '#10b981', to: '#6ee7b7' }, // Emerald
+  { from: '#f59e0b', to: '#fcd34d' }, // Amber
 ]
 
 const ringAnimated = ref(false)
@@ -942,8 +992,8 @@ onUnmounted(() => {
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .input-ring:focus {
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
-  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  border-color: #6366f1;
   outline: none;
 }
 

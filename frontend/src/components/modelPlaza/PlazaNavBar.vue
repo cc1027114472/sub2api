@@ -40,7 +40,7 @@
           {{ t('nav.agentDownload') || '客户端下载' }}
         </RouterLink>
         <RouterLink
-          to="/usage-query"
+          to="/key-usage"
           class="rounded-lg px-3 py-1.5 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-dark-800 dark:hover:text-white"
         >
           {{ t('keyUsage.title') || 'API Key 用量查询' }}

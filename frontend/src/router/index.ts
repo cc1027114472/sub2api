@@ -159,6 +159,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/key-usage',
+    alias: '/usage-query',
     name: 'KeyUsage',
     component: () => import('@/views/KeyUsageView.vue'),
     meta: {
